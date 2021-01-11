@@ -103,16 +103,6 @@ def overlay_stream(args):
         print("Traditionally generated key states with context: ")
         print(key_states_with_context)
         
-    # Get only the important states
-#    print("Key states from df: ")
-#    key_states_with_context=get_key_states_from_df(args, state_features_importance_df)
-#
-#
-#    with pd.option_context('display.max_rows', None, 'display.max_columns', None):
-#        print("Key states from df: ")
-#        print(key_states_with_context)
-    
-    
     # Then generate needed number of random states
     random_states, random_states_with_context, consolidated_random_states_list_without_repeats = get_random_states_list(args, logger, key_states_with_context)
 
@@ -128,8 +118,7 @@ def overlay_stream(args):
             
             if args.verbose:
                 logger.info("About to compare state to consolidated_random_states_list_without_repeats list....")
-                        
-            #            image_indices = [4,5,6,7]
+
 #            if (state_index in consolidated_random_states_list_without_repeats) or (consolidated_random_states_list_without_repeats is None):
             if args.verbose:
                 logger.info("State " + str(state_index) + " is in consolidated_random_states_list_without_repeats list: " + str(consolidated_random_states_list_without_repeats))
@@ -163,7 +152,6 @@ def overlay_stream(args):
             logger.error('Try next image.')
             continue
             
-    
     if args.verbose:
         logger.debug("make blur-based saliency maps for all necessary states")
     old_saliency_map = None
@@ -190,7 +178,7 @@ def overlay_stream(args):
                 else:
                     old_image = i
 
-    #            image_utils.save_image(os.path.join(save_folder, image) ,i)
+                image_utils.save_image(os.path.join(save_folder, image) ,i)
 
                 saliency_filename = raw_argmax_base + "_" + str(state_index) + ".npy"
                 saliency_map = np.load(saliency_filename)

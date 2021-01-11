@@ -7,6 +7,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+import coloredlogs, logging
 import skimage
 from skimage import filters, transform
 import skimage.feature
@@ -223,8 +224,14 @@ def generate_video(args, image_folder, out_path, name="video.mp4", image_indices
     :param image_indices: states to be included in the summary video
     :return: nothing, but saves the video in the given path
     '''
-    print("Image indices are: ")
-    print(image_indices)
+    
+    logger = logging.getLogger()
+    coloredlogs.install(level='DEBUG', fmt='%(asctime)s,%(msecs)03d %(filename)s[%(process)d] %(levelname)s %(message)s')
+    logger.setLevel(logging.DEBUG)
+    
+    if args.verbose:
+        logger.info("Image indices are: ")
+        logger.info(image_indices)
     if not (os.path.isdir(image_folder)):
                 os.makedirs(image_folder)
     #            os.rmdir(image_folder)
@@ -238,7 +245,7 @@ def generate_video(args, image_folder, out_path, name="video.mp4", image_indices
         os.makedirs(out_path)
     video = cv2.VideoWriter(out_path + name, fourcc, fps, (width,height + black_pixels))
     if (args.verbose):
-        print("Just made video writer")
+        logger.info("Just made video writer")
     old_state_index = None
     black_frame = np.zeros((height + black_pixels, width, layers),np.uint8)
     black_frame_number = int(fps)
@@ -246,36 +253,36 @@ def generate_video(args, image_folder, out_path, name="video.mp4", image_indices
     for image in images:
         to_write = False
         if (args.verbose):
-            print("Not to write")
+            logger.info("Not to write")
         try:
             image_str = image.split('_')
             state_index = int(image_str[1])
             if (args.verbose):
-                print("Just broke up image string: " + str(state_index))
+                logger.info("Just broke up image string: " + str(state_index))
             if (state_index in image_indices) or (image_indices is None):
                 if (args.verbose):
-                    print("check if the states are successive and insert black frames, if the are not")
+                    logger.info("check if the states are successive and insert black frames, if the are not")
                 if old_state_index != None and state_index != old_state_index + 1 and state_index != old_state_index:
                     for n in range(black_frame_number):
                         if (args.verbose):
-                            print("write a black frame")
+                            logger.info("write a black frame")
                         video.write(black_frame)
                 old_state_index = state_index
 
                 i = cv2.imread(os.path.join(image_folder, image))
                 if (args.verbose):
-                    print("IMREAD")
+                    logger.debug("IMREAD")
                 if crop_images:
                     i = crop_image_button(i, part = 0.05)
                     if (args.verbose):
-                        print("Crop images")
+                        logger.info("Crop images")
                 i = cv2.resize(i, (width,height))
                 if (args.verbose):
-                    print("Resize")
+                    logger.info("Resize")
                 if crop_images:
                     i = add_black_pixels(i, pixels=black_pixels)
                     if (args.verbose):
-                        print("Add black pixels")
+                        logger.info("Add black pixels")
                 if crop_images:
                     i = draw_black_box(i)
                 to_write = True
@@ -285,11 +292,12 @@ def generate_video(args, image_folder, out_path, name="video.mp4", image_indices
                 print('Try next image.')
             continue
         if to_write:
-            print("And to write is true")
-            print("and i is " + str(image_str))
+            if args.verbose:
+                logger.info("And to write is true")
+                logger.info("and i is " + str(image_str))
             video.write(i)
             if (args.verbose):
-                print("And to write is true")
+                logger.info("And to write is true")
 
     cv2.destroyAllWindows()
     video.release()

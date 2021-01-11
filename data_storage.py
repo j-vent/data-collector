@@ -313,7 +313,7 @@ class DataVault:
             if pill_eaten[index] == False:
                 print("Pill " + str(index+1) + " not recorded as eaten yet")
                 print(pill)
-                if pill < 2:
+                if pill < 5:
                     print("Setting pill " + str(index+1) + " to eaten")
                     pill_eaten[index] = True
                     
