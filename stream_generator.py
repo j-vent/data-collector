@@ -7,8 +7,7 @@
     At the very end *overlay_stream* is used to overlay each frame with a saliency map.
     This can also be redone later using *overlay_stream* to save time while trying different overlay styles.
 """
-
-
+# numpy, scipy
 import gym
 import matplotlib.pyplot as plt
 from custom_atari_wrapper import atari_wrapper, AltRewardsWrapper
@@ -98,6 +97,7 @@ def get_feature_vector(model, input):
     return features
     
 def generate_stream(args):
+    # setup the logging to command line
     logger = logging.getLogger()
     coloredlogs.install(level='DEBUG', fmt='%(asctime)s,%(msecs)03d %(filename)s[%(process)d] %(levelname)s %(message)s')
 
@@ -137,6 +137,7 @@ def generate_stream(args):
         logger.info("Model Summary....................................")
         logger.info(model.summary())
 
+    # apply greedy algorithm?
     analyzer_arg = Argmax(model)
 
     mean_reward = 0
@@ -146,11 +147,13 @@ def generate_stream(args):
     epoch = 1
     reward_list = []
     
+    # create env from the arg passed to env flag, stored from earlier command line argument when creating model
     env = gym.make(args.gym_env)
 #        logger.info("HERE and now environment is: ")
 #        logger.info(args.gym_env)
     action_names = env.unwrapped.get_action_meanings()
     if args.verbose:
+        logger.info("Action names: ")
         logger.info(action_names)
     for x in range(len(action_names)):
         action_episode_sums.append(0)
@@ -159,6 +162,7 @@ def generate_stream(args):
             logger.info("Action sums: ")
             logger.info(action_episode_sums)
     
+    # Wrappers for creating custom policies and modes
     env = AltRewardsWrapper(env)
     env.reset()
     wrapper = atari_wrapper(env)
@@ -166,6 +170,7 @@ def generate_stream(args):
     if fixed_start :
         rapper.fixed_reset(300,2) #used  action 3 and 4
 
+    # setup directory/file structure for results
     directory = ''
     directory = os.path.join(directory, args.stream_folder)
     save_file_argmax = os.path.join(directory, 'argmax', 'argmax')
@@ -185,6 +190,8 @@ def generate_stream(args):
     average_score_file = os.path.join(directory, 'average_score.txt')
 
     for _ in range(steps):
+        # represents first 3 steps
+        # 
         if _ < 4:
             action = env.action_space.sample()
 #            print("Now trying to take an action and it is: " + str(action))
@@ -201,22 +208,28 @@ def generate_stream(args):
             argmax = 0
             my_input = [0]
         else:
+            # change dimension by ?
             my_input = np.expand_dims(stacked_frames, axis=0)
 #            logger.info("first input: ")
 #            logger.info(my_input)
 #            logger.info("squeezed input")
 #            logger.debug(np.squeeze(my_input))
-            
-            if args.verbose:
-                logger.info("MY_INPUT is: " + str(my_input))
+
+            # too much to print
+            # if args.verbose:
+            #     logger.info("MY_INPUT is: " + str(my_input))
             output = model.predict(my_input, verbose = 0)  #this output corresponds with the output in baseline if --dueling=False is correctly set for baselines.
+            logger.info("******my output: ")
+            logger.info(output)
             # save model predictions
             save_q_values(output, save_file_q_values, _)
             #save_array(output, save_file_q_value_numpys, _)
+            # features = feedback
             features = get_feature_vector(model, my_input)
             save_q_values(features,save_file_features,_)
             save_array(features, save_file_features,_)
 
+            # take the prediction with the highest reward value
             action = np.argmax(np.squeeze(output))
 
 #            while (action == 0 or action > 4):
@@ -238,6 +251,7 @@ def generate_stream(args):
             for i in range(len(observations)):
                 index = str(_) + '_' + str(i)
                 observation = observations[i]
+                # takes up too much room to print
                 if args.verbose:
                     logger.info("Obs is: ")
                     logger.info(observation)
@@ -247,12 +261,14 @@ def generate_stream(args):
             print("About to seek pacman")
             characters, bg_locs = imagePeeler.wheresPacman(observation)
     
+        # take a step
+        # callback function
         stacked_frames, observations, reward, done, info = wrapper.step(action)
         
         total_reward = total_reward + reward
         mean_reward = (sum(reward_list) + total_reward)/step
         if (args.verbose):
-            logger.info("Step " + str(step) + " out of " + str(args.num_steps))
+            logger.info("Step " + str(step) + " out of " + str(steps))
         step = step + 1
         ram = env.unwrapped._get_ram()
         if args.verbose:
@@ -265,19 +281,28 @@ def generate_stream(args):
         if _ >= 4:
             # Add call here to update Pandas dataframe and output info for analysis
             lives = env.ale.lives()
+            logger.info("*****IN the call to data storage!!")
             action_episode_sums, action_total_sums, pill_eaten = dv.store_data(action, action_names[action], action_episode_sums, action_total_sums, reward, done, lives, mean_reward, characters, bg_locs, pill_eaten)
 #            dv.store_arrays(output, argmax, observations)
+            logger.info("action ep sums")
+            logger.info(action_episode_sums)
+            logger.info("action total sums")
+            logger.info(action_total_sums)
+            logger.info("pill_eaten")
+            logger.info(pill_eaten)
     
+        # last life lost
         if done:
             if args.verbose:
                 logger.info('total_reward',total_reward)
             reward_list.append(total_reward)
             
             total_reward = 0
-            
+        # see game being played
         if (args.watch_agent):
             env.render()
 
+    # update rewards with each iteration
     reward_list.append(total_reward)
     average_reward = np.mean(reward_list)
     with open(scores_file, "w") as text_file:
