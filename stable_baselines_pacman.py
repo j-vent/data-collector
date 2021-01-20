@@ -17,109 +17,110 @@ env = make_atari('MsPacmanNoFrameskip-v4')
 #get rid of distracting TF errors
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
-step_callback = CustomCallback()
+step_callback = CustomCallback(0,env.unwrapped.get_action_meanings())
 
 # omit this and just pass in previously trained models
+# learning_rate set to 0 means it will act as a predict function
 model = DQN(CnnPolicy, env, verbose=1, learning_rate=0)
 # # random agent
-model.learn(total_timesteps=25000, callback = step_callback) # 25000
+model.learn(total_timesteps=2500, callback = step_callback) # 25000
 model.save("deepq_pacman_callback")
 
 # del model # remove to demonstrate saving and loading
 
 # model = DQN.load("deepq_pacman") 
-model = DQN.load("deepq_pacman_callback") 
-# TODO: pass model into here, change to args.agent_model
-# model_path = os.path.join('models', 'MsPacman_5M_power_pill')
-# model = DQN.load(model_path)
+# model = DQN.load("deepq_pacman_callback") 
+# # TODO: pass model into here, change to args.agent_model
+# # model_path = os.path.join('models', 'MsPacman_5M_power_pill')
+# # model = DQN.load(model_path)
 
-main_data_dict = OrderedDict()
+# main_data_dict = OrderedDict()
 
-directory = 'results/'
-if not os.path.isdir(directory):
-    os.mkdir(directory)
+# directory = 'results/'
+# if not os.path.isdir(directory):
+#     os.mkdir(directory)
 
-action_file = os.path.join(directory, 'actions.txt')
-reward_file = os.path.join(directory, 'rewards.txt')
-action_list = []
-reward_list = []
-df_list = []
+# action_file = os.path.join(directory, 'actions.txt')
+# reward_file = os.path.join(directory, 'rewards.txt')
+# action_list = []
+# reward_list = []
+# df_list = []
 
-# action names ['NOOP', 'UP', 'RIGHT', 'LEFT', 'DOWN', 'UPRIGHT', 'UPLEFT', 'DOWNRIGHT', 'DOWNLEFT']
+# # action names ['NOOP', 'UP', 'RIGHT', 'LEFT', 'DOWN', 'UPRIGHT', 'UPLEFT', 'DOWNRIGHT', 'DOWNLEFT']
 
-# dataframe is a db table 
-def make_dataframes():
-        # Make the main Dataframe
-        main_df = pd.DataFrame.from_dict(main_data_dict, orient='index')
+# # dataframe is a db table 
+# def make_dataframes():
+#         # Make the main Dataframe
+#         main_df = pd.DataFrame.from_dict(main_data_dict, orient='index')
 
-        # call to save last items as seperate df
-        # self.save_last_line(args.stream_folder, main_df)
+#         # call to save last items as seperate df
+#         # self.save_last_line(args.stream_folder, main_df)
         
-        # Now that we've parsed down the main df, load all into our list
-        # of DFs and our list of Names
-        df_list.append(main_df)
+#         # Now that we've parsed down the main df, load all into our list
+#         # of DFs and our list of Names
+#         df_list.append(main_df)
 
 
-def df_to_csv(stream_directory):
-        counter = 1
-        for df in df_list:
-            # str(df_names_list[counter-1])
-            filename = "df" + str(counter) +  "temp.csv"
-            filepath = os.path.join(stream_directory, filename)
-            print("Making csvs and path is: ")
-            print(filepath)
-            if os.path.exists(filepath):
-                df.to_csv(filepath, mode='a', index=False, header=False)
-            else:
-                df.to_csv(filepath, mode='a', index=False)
-            counter = counter + 1
+# def df_to_csv(stream_directory):
+#         counter = 1
+#         for df in df_list:
+#             # str(df_names_list[counter-1])
+#             filename = "df" + str(counter) +  "temp.csv"
+#             filepath = os.path.join(stream_directory, filename)
+#             print("Making csvs and path is: ")
+#             print(filepath)
+#             if os.path.exists(filepath):
+#                 df.to_csv(filepath, mode='a', index=False, header=False)
+#             else:
+#                 df.to_csv(filepath, mode='a', index=False)
+#             counter = counter + 1
 
-def df_to_parquet(stream_directory):
-        counter = 1
-        for df in df_list:
-            # str(self.df_names_list[counter-1])
-            filename = "df" + str(counter) + "temp.parquet"
-            filepath = os.path.join(stream_directory, filename)
-            print("Making parquets and path is: ")
-            print(filepath)
-            table = pa.Table.from_pandas(df)
-            # Parquet with Brotli compression
-            pq.write_table(table, filepath, compression='BROTLI')
-            counter = counter + 1
+# def df_to_parquet(stream_directory):
+#         counter = 1
+#         for df in df_list:
+#             # str(self.df_names_list[counter-1])
+#             filename = "df" + str(counter) + "temp.parquet"
+#             filepath = os.path.join(stream_directory, filename)
+#             print("Making parquets and path is: ")
+#             print(filepath)
+#             table = pa.Table.from_pandas(df)
+#             # Parquet with Brotli compression
+#             pq.write_table(table, filepath, compression='BROTLI')
+#             counter = counter + 1
 
-obs = env.reset()
-reward = 0
-num_steps = 10000
+# obs = env.reset()
+# reward = 0
+# num_steps = 10000
 
 
-def evaluate(model, num_steps):
-  """
-  Evaluate a RL agent
-  :param model: (BaseRLModel object) the RL Agent
-  :param num_steps: (int) number of timesteps to evaluate it
-  :return: (float) Mean reward for the last 100 episodes
-  """
-  episode_rewards = [0.0]
-  obs = env.reset()
-  for i in range(num_steps):
-      # _states are only useful when using LSTM policies
-      action, _states = model.predict(obs)
-      # here, action, rewards and dones are arrays
-      # because we are using vectorized env
-      obs, rewards, dones, info = env.step(action)
+# def evaluate(model, num_steps):
+#   """
+#   Evaluate a RL agent
+#   :param model: (BaseRLModel object) the RL Agent
+#   :param num_steps: (int) number of timesteps to evaluate it
+#   :return: (float) Mean reward for the last 100 episodes
+#   """
+#   episode_rewards = [0.0]
+#   obs = env.reset()
+#   for i in range(num_steps):
+#       # _states are only useful when using LSTM policies
+#       action, _states = model.predict(obs)
+#       # here, action, rewards and dones are arrays
+#       # because we are using vectorized env
+#       obs, rewards, dones, info = env.step(action)
       
-      # Stats
-      episode_rewards[-1] += rewards
-      if dones:
-          obs = env.reset()
-          episode_rewards.append(0.0)
-  # Compute mean reward for the last 100 episodes
-  mean_100ep_reward = round(np.mean(episode_rewards[-100:]), 1)
-  print("Mean reward:", mean_100ep_reward, "Num episodes:", len(episode_rewards))
+#       # Stats
+#       episode_rewards[-1] += rewards
+#       if dones:
+#           obs = env.reset()
+#           episode_rewards.append(0.0)
+#   # Compute mean reward for the last 100 episodes
+#   mean_100ep_reward = round(np.mean(episode_rewards[-100:]), 1)
+#   print("Mean reward:", mean_100ep_reward, "Num episodes:", len(episode_rewards))
   
-  return mean_100ep_reward
+#   return mean_100ep_reward
 
-evaluate(model, num_steps)
+# evaluate(model, num_steps)
 # # TODO: rewrite as eval function
 # for i in range(num_steps):
 #     action, _states = model.predict(obs)

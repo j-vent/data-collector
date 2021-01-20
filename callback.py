@@ -1,5 +1,6 @@
 from stable_baselines.common.callbacks import BaseCallback
-
+import matplotlib.pyplot as plt
+import os
 
 class CustomCallback(BaseCallback):
     """
@@ -7,8 +8,14 @@ class CustomCallback(BaseCallback):
 
     :param verbose: (int) Verbosity level 0: not output 1: info 2: debug
     """
-    def __init__(self, verbose=0):
+    actions = []
+    directory = 'results/'
+    save_file_screen = os.path.join(directory, 'screen', 'screen')
+    
+    def __init__(self, verbose=0, env_actions=[]):
         super(CustomCallback, self).__init__(verbose)
+        self.actions = env_actions
+        # print("here is list of actions ", actions)
         # Those variables will be accessible in the callback
         # (they are defined in the base class)
         # The RL model
@@ -26,6 +33,18 @@ class CustomCallback(BaseCallback):
         # # Sometimes, for event callback, it is useful
         # # to have access to the parent object
         # self.parent = None  # type: Optional[BaseCallback]
+
+    def save_frame(self, array, save_file, frame):
+        if not (os.path.isdir(save_file)):
+            os.makedirs(save_file)
+            os.rmdir(save_file)
+        plt.imsave(save_file + '_' + str(frame) + '.png', array)
+
+    def save_observations(self, observations):
+        for i in range(len(observations)):
+            index = str("_") + '_' + str(i)
+            observation = observations[i]
+            self.save_frame(observation, self.save_file_screen, index)
 
     def _on_training_start(self) -> None:
         """
@@ -50,20 +69,25 @@ class CustomCallback(BaseCallback):
 
         :return: (bool) If the callback returns False, training is aborted early.
         """
-        # output = self.model.predict(my_input, verbose = 0)  #this output corresponds with the output in baseline if --dueling=False is correctly set for baselines.
-        # logger.info("******my output: ")
-        # logger.info(output)
-        # test that program goes into callback
-
         
-        print("action", self.locals['env_action'])
-        # TODO: map action to list of action names
-        print("ep rewards: ", self.locals['episode_rewards'])
-        print("lives left: ", self.locals['info'].['ale.lives'])
-        print("done ", self.locals['done'])
+        # print("actions in step ", self.actions)
+        # print("action", self.locals['env_action'])
+        # print("action name", self.actions[self.locals['env_action']])
+        # print("ep rewards: ", self.locals['episode_rewards'])
+        # print("lives left: ", self.locals['info'])
+        # print("done ", self.locals['done'])
         # print("glob dict ", self.globals)
-        self.locals['obs']
+        # screen output
+        print("obs: ", self.locals['obs'])
+        self.save_observations(self.locals['obs'])
+        
+        # print(self.locals)
         return True
+        # just see one set of outputs
+        # if(self.num_timesteps < 2):
+        #     print(self.locals)
+        #     return True
+        # return False
 
     def _on_rollout_end(self) -> None:
         """
@@ -76,3 +100,5 @@ class CustomCallback(BaseCallback):
         This event is triggered before exiting the `learn()` method.
         """
         pass
+
+    
