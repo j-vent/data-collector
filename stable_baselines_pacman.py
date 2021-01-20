@@ -16,7 +16,7 @@ env = make_atari('MsPacmanNoFrameskip-v4')
 
 #get rid of distracting TF errors
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
-num_steps = 250
+num_steps = 10
 
 step_callback = CustomCallback(0,env.unwrapped.get_action_meanings(), env,  num_steps)
 

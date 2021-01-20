@@ -26,7 +26,6 @@ class CustomCallback(BaseCallback):
         self.actions = env_actions
         self.env = env
         self.num_steps = num_steps
-        # self.step = self.step +1
         # env <MaxAndSkipEnv<NoopResetEnv<TimeLimit<AtariEnv<MsPacmanNoFrameskip-v4>>>>>
         print("env", env)
         # print("mod ",  self.model)
@@ -47,8 +46,8 @@ class CustomCallback(BaseCallback):
         # # Sometimes, for event callback, it is useful
         # # to have access to the parent object
         # self.parent = None  # type: Optional[BaseCallback]
-    # # dataframe is a db table 
-    
+
+    # dataframe is a db table 
     def make_dataframes(self):
         # Make the main Dataframe
         main_df = pd.DataFrame.from_dict(CustomCallback.main_data_dict, orient='index')
@@ -124,24 +123,14 @@ class CustomCallback(BaseCallback):
         :return: (bool) If the callback returns False, training is aborted early.
         """
         
-        # print("actions in step ", self.actions)
-        # print("action", self.locals['env_action'])
-        # print("action name", self.actions[self.locals['env_action']])
-        # print("ep rewards: ", self.locals['episode_rewards'])
-        # print("lives left: ", self.locals['info']['ale.lives'])
-        # print("done ", self.locals['done'])
-        # print("glob dict ", self.globals)
+       
         # # screen output
         # # print("obs: ", self.locals['obs'])
         # # self.save_observations(self.locals['obs'])
         # self.env.env.ale.saveScreenPNG('test_image.png')
         # print("local: ", self.locals)
-        # return True
-        # just see one set of outputs
-        # if(self.num_timesteps < 2):
-        #     print(self.locals)
-        #     return True
-        # return False
+     
+        # episode rewards kind of weird, not sure if correct field is used
         step_stats = { CustomCallback.step: {
                 'action': self.locals['env_action'],
                 'action_name': self.actions[self.locals['env_action']],
