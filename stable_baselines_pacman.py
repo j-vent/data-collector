@@ -9,6 +9,7 @@ from stable_baselines.deepq.policies import MlpPolicy, CnnPolicy
 from stable_baselines import DQN
 import pyarrow as pa
 import pyarrow.parquet as pq
+import numpy as np
 from callback import CustomCallback
 # env = make_atari('BreakoutNoFrameskip-v4')
 env = make_atari('MsPacmanNoFrameskip-v4')
@@ -19,15 +20,15 @@ tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 step_callback = CustomCallback()
 
 # omit this and just pass in previously trained models
-# model = DQN(CnnPolicy, env, verbose=1)
+model = DQN(CnnPolicy, env, verbose=1, learning_rate=0)
 # # random agent
-# model.learn(total_timesteps=25000, callback = step_callback) # 25000
-# model.save("deepq_pacman_callback")
+model.learn(total_timesteps=25000, callback = step_callback) # 25000
+model.save("deepq_pacman_callback")
 
 # del model # remove to demonstrate saving and loading
 
-model = DQN.load("deepq_pacman_random") 
-# model = DQN.load("deepq_pacman_callback") 
+# model = DQN.load("deepq_pacman") 
+model = DQN.load("deepq_pacman_callback") 
 # TODO: pass model into here, change to args.agent_model
 # model_path = os.path.join('models', 'MsPacman_5M_power_pill')
 # model = DQN.load(model_path)
@@ -87,41 +88,72 @@ def df_to_parquet(stream_directory):
             counter = counter + 1
 
 obs = env.reset()
-reward = 0;
-while True:
-    action, _states = model.predict(obs)
-    print("action taken ", action)
-    # print("states ", _states) # why none??
-    action_list.append(action)
-    obs, rewards, dones, info = env.step(action)
-    reward += rewards
-    # lives = env.ale.lives()
-    # print("lives remaining ", lives)
-    # q values storing
-    env.render()
-    if(dones):
-        reward_list.append(reward)
-        break
+reward = 0
+num_steps = 10000
 
-# TODO: save data at each STEP, right now just record at end of one game
 
-with open(action_file, "w") as text_file:
-        text_file.write(str(action_list))
+def evaluate(model, num_steps):
+  """
+  Evaluate a RL agent
+  :param model: (BaseRLModel object) the RL Agent
+  :param num_steps: (int) number of timesteps to evaluate it
+  :return: (float) Mean reward for the last 100 episodes
+  """
+  episode_rewards = [0.0]
+  obs = env.reset()
+  for i in range(num_steps):
+      # _states are only useful when using LSTM policies
+      action, _states = model.predict(obs)
+      # here, action, rewards and dones are arrays
+      # because we are using vectorized env
+      obs, rewards, dones, info = env.step(action)
+      
+      # Stats
+      episode_rewards[-1] += rewards
+      if dones:
+          obs = env.reset()
+          episode_rewards.append(0.0)
+  # Compute mean reward for the last 100 episodes
+  mean_100ep_reward = round(np.mean(episode_rewards[-100:]), 1)
+  print("Mean reward:", mean_100ep_reward, "Num episodes:", len(episode_rewards))
+  
+  return mean_100ep_reward
 
-with open(reward_file, "w") as text_file:
-        text_file.write(str(reward_list))
+evaluate(model, num_steps)
+# # TODO: rewrite as eval function
+# for i in range(num_steps):
+#     action, _states = model.predict(obs)
+#     print("action taken ", action)
+   
+#     action_list.append(action)
+#     obs, rewards, dones, info = env.step(action)
+#     reward += rewards
+#     # lives = env.ale.lives()
+#     # print("lives remaining ", lives)
+#     # q values storing
+#     env.render()
+#     if(dones):
+#         reward_list.append(reward)
+        
+# # TODO: save data at each STEP, right now just record at end of one game
 
-# TODO: add 'action_name': action_name, other fields
-step_stats = { 
+# with open(action_file, "w") as text_file:
+#         text_file.write(str(action_list))
+
+# with open(reward_file, "w") as text_file:
+#         text_file.write(str(reward_list))
+
+# # TODO: add 'action_name': action_name, other fields
+# step_stats = { 
                 
-                'action': action,
-                'reward': reward
-            }
+#                 'action': action,
+#                 'reward': reward
+#             }
 
-main_data_dict.update(step_stats)
-make_dataframes()
-df_to_csv(directory);
-df_to_parquet(directory);
-# test if parquet file is correctly created
-print("reading parquet file", pd.read_parquet("results/df1temp.parquet"))
-print("finished!!")
+# main_data_dict.update(step_stats)
+# make_dataframes()
+# df_to_csv(directory);
+# df_to_parquet(directory);
+# # test if parquet file is correctly created
+# print("reading parquet file", pd.read_parquet("results/df1temp.parquet"))
+# print("finished!!")

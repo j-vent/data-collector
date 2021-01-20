@@ -54,7 +54,15 @@ class CustomCallback(BaseCallback):
         # logger.info("******my output: ")
         # logger.info(output)
         # test that program goes into callback
-        print("IN CALLBACK FUNC! num timesteps ", self.num_timesteps)
+
+        
+        print("action", self.locals['env_action'])
+        # TODO: map action to list of action names
+        print("ep rewards: ", self.locals['episode_rewards'])
+        print("lives left: ", self.locals['info'].['ale.lives'])
+        print("done ", self.locals['done'])
+        # print("glob dict ", self.globals)
+        self.locals['obs']
         return True
 
     def _on_rollout_end(self) -> None:
