@@ -1,6 +1,11 @@
 from stable_baselines.common.callbacks import BaseCallback
 import matplotlib.pyplot as plt
 import os
+import pandas as pd
+import pyarrow as pa
+import pyarrow.parquet as pq
+import numpy as np
+from collections import OrderedDict
 
 class CustomCallback(BaseCallback):
     """
@@ -11,11 +16,20 @@ class CustomCallback(BaseCallback):
     actions = []
     directory = 'results/'
     save_file_screen = os.path.join(directory, 'screen', 'screen')
-    
-    def __init__(self, verbose=0, env_actions=[]):
+    env = None
+    step = 1
+    main_data_dict = OrderedDict()
+    df_list = []
+    num_steps = 10
+    def __init__(self, verbose=0, env_actions=[], env =None, num_steps=10):
         super(CustomCallback, self).__init__(verbose)
         self.actions = env_actions
-        # print("here is list of actions ", actions)
+        self.env = env
+        self.num_steps = num_steps
+        # self.step = self.step +1
+        # env <MaxAndSkipEnv<NoopResetEnv<TimeLimit<AtariEnv<MsPacmanNoFrameskip-v4>>>>>
+        print("env", env)
+        # print("mod ",  self.model)
         # Those variables will be accessible in the callback
         # (they are defined in the base class)
         # The RL model
@@ -33,6 +47,45 @@ class CustomCallback(BaseCallback):
         # # Sometimes, for event callback, it is useful
         # # to have access to the parent object
         # self.parent = None  # type: Optional[BaseCallback]
+    # # dataframe is a db table 
+    
+    def make_dataframes(self):
+        # Make the main Dataframe
+        main_df = pd.DataFrame.from_dict(CustomCallback.main_data_dict, orient='index')
+
+        # call to save last items as seperate df
+        # self.save_last_line(args.stream_folder, main_df)
+        
+        # Now that we've parsed down the main df, load all into our list
+        # of DFs and our list of Names
+        self.df_list.append(main_df)
+
+    def df_to_csv(self, stream_directory):
+        counter = 1
+        for df in self.df_list:
+            # str(df_names_list[counter-1])
+            filename = "df" + str(counter) +  "cbtemp.csv"
+            filepath = os.path.join(stream_directory, filename)
+            print("Making csvs and path is: ")
+            print(filepath)
+            if os.path.exists(filepath):
+                df.to_csv(filepath, mode='a', index=False, header=False)
+            else:
+                df.to_csv(filepath, mode='a', index=False)
+            counter = counter + 1
+
+    def df_to_parquet(self, stream_directory):
+        counter = 1 # make static var
+        for df in self.df_list:
+            # str(self.df_names_list[counter-1])
+            filename = "df" + str(counter) + "cbtemp.parquet"
+            filepath = os.path.join(stream_directory, filename)
+            print("Making parquets and path is: ")
+            print(filepath)
+            table = pa.Table.from_pandas(df)
+            # Parquet with Brotli compression
+            pq.write_table(table, filepath, compression='BROTLI')
+            counter = counter + 1
 
     def save_frame(self, array, save_file, frame):
         if not (os.path.isdir(save_file)):
@@ -45,6 +98,7 @@ class CustomCallback(BaseCallback):
             index = str("_") + '_' + str(i)
             observation = observations[i]
             self.save_frame(observation, self.save_file_screen, index)
+
 
     def _on_training_start(self) -> None:
         """
@@ -74,20 +128,40 @@ class CustomCallback(BaseCallback):
         # print("action", self.locals['env_action'])
         # print("action name", self.actions[self.locals['env_action']])
         # print("ep rewards: ", self.locals['episode_rewards'])
-        # print("lives left: ", self.locals['info'])
+        # print("lives left: ", self.locals['info']['ale.lives'])
         # print("done ", self.locals['done'])
         # print("glob dict ", self.globals)
-        # screen output
-        print("obs: ", self.locals['obs'])
-        self.save_observations(self.locals['obs'])
-        
-        # print(self.locals)
-        return True
+        # # screen output
+        # # print("obs: ", self.locals['obs'])
+        # # self.save_observations(self.locals['obs'])
+        # self.env.env.ale.saveScreenPNG('test_image.png')
+        # print("local: ", self.locals)
+        # return True
         # just see one set of outputs
         # if(self.num_timesteps < 2):
         #     print(self.locals)
         #     return True
         # return False
+        step_stats = { CustomCallback.step: {
+                'action': self.locals['env_action'],
+                'action_name': self.actions[self.locals['env_action']],
+                'episode_reward': self.locals['episode_rewards'],
+                'state': CustomCallback.step,
+                'lives':self.locals['info']['ale.lives']
+            }
+        }
+        CustomCallback.main_data_dict.update(step_stats)
+        CustomCallback.step = CustomCallback.step + 1
+        
+        if(CustomCallback.step == self.num_steps):
+            self.make_dataframes()
+            self.df_to_csv(CustomCallback.directory);
+            self.df_to_parquet(CustomCallback.directory);
+            # test if parquet file is correctly created
+            print("reading parquet file")
+            print(pd.read_parquet("results/df1cbtemp.parquet"))
+            print("finished!!")
+
 
     def _on_rollout_end(self) -> None:
         """
