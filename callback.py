@@ -21,6 +21,8 @@ class CustomCallback(BaseCallback):
     main_data_dict = OrderedDict()
     df_list = []
     num_steps = 10
+    counter = 1
+
     def __init__(self, verbose=0, env_actions=[], env =None, num_steps=10):
         super(CustomCallback, self).__init__(verbose)
         self.actions = env_actions
@@ -60,6 +62,7 @@ class CustomCallback(BaseCallback):
         self.df_list.append(main_df)
 
     def df_to_csv(self, stream_directory):
+        # SWITCH TO A STATIC VAR
         counter = 1
         for df in self.df_list:
             # str(df_names_list[counter-1])
@@ -124,11 +127,12 @@ class CustomCallback(BaseCallback):
         """
         
        
-        # # screen output
+        # # screen output.
+        # TODO: get proper screen outputs
         # # print("obs: ", self.locals['obs'])
         # # self.save_observations(self.locals['obs'])
+        # tried using built-in screen capture but no env object to work with 
         # self.env.env.ale.saveScreenPNG('test_image.png')
-        # print("local: ", self.locals)
      
         # episode rewards kind of weird, not sure if correct field is used
         step_stats = { CustomCallback.step: {
@@ -139,9 +143,11 @@ class CustomCallback(BaseCallback):
                 'lives':self.locals['info']['ale.lives']
             }
         }
+        # add step to dict and increment static step variable
         CustomCallback.main_data_dict.update(step_stats)
         CustomCallback.step = CustomCallback.step + 1
         
+        # convert dict to different types
         if(CustomCallback.step == self.num_steps):
             self.make_dataframes()
             self.df_to_csv(CustomCallback.directory);
