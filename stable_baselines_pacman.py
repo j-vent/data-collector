@@ -11,17 +11,28 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 import numpy as np
 from callback import CustomCallback
-# env = make_atari('BreakoutNoFrameskip-v4')
+from stable_baselines.bench import Monitor
+from stable_baselines.common.vec_env import DummyVecEnv
+from stable_baselines.common.cmd_util import make_vec_env
+import os, datetime
+
+dir = 'data_' + datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + '/'
+print("HELLO")
+print("new dir", dir)
+os.makedirs(dir)
+subfolder = os.path.join(dir, 'screen')
+os.makedirs(subfolder)
 env = make_atari('MsPacmanNoFrameskip-v4')
 
-#get rid of distracting TF errors
+
+# get rid of distracting TF errors
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 # set num timesteps
-num_steps = 10
+num_steps = 1200
 
 # define callback object
-step_callback = CustomCallback(0,env.unwrapped.get_action_meanings(), env,  num_steps)
+step_callback = CustomCallback(0,env.unwrapped.get_action_meanings(), env,  num_steps, dir)
 
 
 # TODO: omit this and just pass in previously trained models

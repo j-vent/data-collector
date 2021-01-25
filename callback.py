@@ -1,4 +1,5 @@
 from stable_baselines.common.callbacks import BaseCallback
+from stable_baselines.common.evaluation import evaluate_policy
 import matplotlib.pyplot as plt
 import os
 import pandas as pd
@@ -23,14 +24,16 @@ class CustomCallback(BaseCallback):
     num_steps = 10
     counter = 1
 
-    def __init__(self, verbose=0, env_actions=[], env =None, num_steps=10):
+    def __init__(self, verbose=0, env_actions=[], env =None, num_steps=10, dir = 'results/'):
         super(CustomCallback, self).__init__(verbose)
         self.actions = env_actions
-        self.env = env
+        self.env = env.unwrapped
         self.num_steps = num_steps
+        self.directory = dir
         # env <MaxAndSkipEnv<NoopResetEnv<TimeLimit<AtariEnv<MsPacmanNoFrameskip-v4>>>>>
-        print("env", env)
-        # print("mod ",  self.model)
+        print("dir ", self.directory)
+        print("env", env.unwrapped)
+        print("mod ",  self.model)
         # Those variables will be accessible in the callback
         # (they are defined in the base class)
         # The RL model
@@ -61,33 +64,29 @@ class CustomCallback(BaseCallback):
         # of DFs and our list of Names
         self.df_list.append(main_df)
 
-    def df_to_csv(self, stream_directory):
-        # SWITCH TO A STATIC VAR
-        counter = 1
+    def df_to_csv(self):
         for df in self.df_list:
-            # str(df_names_list[counter-1])
-            filename = "df" + str(counter) +  "cbtemp.csv"
-            filepath = os.path.join(stream_directory, filename)
+            filename = "df.csv"
+            filepath = os.path.join(self.directory, filename)
             print("Making csvs and path is: ")
             print(filepath)
             if os.path.exists(filepath):
                 df.to_csv(filepath, mode='a', index=False, header=False)
             else:
                 df.to_csv(filepath, mode='a', index=False)
-            counter = counter + 1
+           
 
-    def df_to_parquet(self, stream_directory):
-        counter = 1 # make static var
+    def df_to_parquet(self):
         for df in self.df_list:
             # str(self.df_names_list[counter-1])
-            filename = "df" + str(counter) + "cbtemp.parquet"
-            filepath = os.path.join(stream_directory, filename)
+            filename = "df.parquet"
+            filepath = os.path.join(self.directory, filename)
             print("Making parquets and path is: ")
             print(filepath)
             table = pa.Table.from_pandas(df)
             # Parquet with Brotli compression
             pq.write_table(table, filepath, compression='BROTLI')
-            counter = counter + 1
+            
 
     def save_frame(self, array, save_file, frame):
         if not (os.path.isdir(save_file)):
@@ -126,23 +125,36 @@ class CustomCallback(BaseCallback):
         :return: (bool) If the callback returns False, training is aborted early.
         """
         
-       
+        # episode = live, epoch = game
         # # screen output.
         # TODO: get proper screen outputs
-        # # print("obs: ", self.locals['obs'])
+        
+        # print("obs: ", self.locals['episode_rewards'])
         # # self.save_observations(self.locals['obs'])
         # tried using built-in screen capture but no env object to work with 
-        # self.env.env.ale.saveScreenPNG('test_image.png')
-     
+        # print("here ")
+        # step_str = str(CustomCallback.step)
+        # print("Ss going into ", os.path.join(self.directory,'screenshot' + str(CustomCallback.step) + '.png'))
+        subfolder = os.path.join(self.directory, 'screen')
+        filepath =  os.path.join(subfolder, 'screenshot' + str(CustomCallback.step) + '.png')
+        self.env.ale.saveScreenPNG(filepath)
+        # episode_rewards, episode_lengths = evaluate_policy(self.model, self.env,
+        #                                                        n_eval_episodes=self.n_eval_episodes,
+        #                                                        render=self.render,
+        #                                                        deterministic=self.deterministic,
+        #                                                        return_episode_rewards=True)
+        # pretty sure it is a list that gets appended per life?
+        print("step: ", CustomCallback.step,  " rew: ", self.locals['episode_rewards'][-1])
         # episode rewards kind of weird, not sure if correct field is used
         step_stats = { CustomCallback.step: {
                 'action': self.locals['env_action'],
                 'action_name': self.actions[self.locals['env_action']],
-                'episode_reward': self.locals['episode_rewards'],
+                'episode_reward': self.locals['episode_rewards'][-1],
                 'state': CustomCallback.step,
                 'lives':self.locals['info']['ale.lives']
             }
         }
+
         # add step to dict and increment static step variable
         CustomCallback.main_data_dict.update(step_stats)
         CustomCallback.step = CustomCallback.step + 1
@@ -150,11 +162,11 @@ class CustomCallback(BaseCallback):
         # convert dict to different types
         if(CustomCallback.step == self.num_steps):
             self.make_dataframes()
-            self.df_to_csv(CustomCallback.directory);
-            self.df_to_parquet(CustomCallback.directory);
+            self.df_to_csv()
+            self.df_to_parquet()
             # test if parquet file is correctly created
             print("reading parquet file")
-            print(pd.read_parquet("results/df1cbtemp.parquet"))
+            print(pd.read_parquet(os.path.join(self.directory,  "df.parquet")))
             print("finished!!")
 
 
