@@ -22,7 +22,6 @@ class CustomCallback(BaseCallback):
     main_data_dict = OrderedDict()
     df_list = []
     num_steps = 10
-    counter = 1
 
     def __init__(self, verbose=0, env_actions=[], env =None, num_steps=10, dir = 'results/'):
         super(CustomCallback, self).__init__(verbose)
@@ -78,7 +77,6 @@ class CustomCallback(BaseCallback):
 
     def df_to_parquet(self):
         for df in self.df_list:
-            # str(self.df_names_list[counter-1])
             filename = "df.parquet"
             filepath = os.path.join(self.directory, filename)
             print("Making parquets and path is: ")
@@ -125,16 +123,9 @@ class CustomCallback(BaseCallback):
         :return: (bool) If the callback returns False, training is aborted early.
         """
         
-        # episode = live, epoch = game
-        # # screen output.
-        # TODO: get proper screen outputs
-        
-        # print("obs: ", self.locals['episode_rewards'])
-        # # self.save_observations(self.locals['obs'])
-        # tried using built-in screen capture but no env object to work with 
-        # print("here ")
-        # step_str = str(CustomCallback.step)
-        # print("Ss going into ", os.path.join(self.directory,'screenshot' + str(CustomCallback.step) + '.png'))
+        # episode = life, epoch = game
+
+        # save screenshot to folder
         subfolder = os.path.join(self.directory, 'screen')
         filepath =  os.path.join(subfolder, 'screenshot' + str(CustomCallback.step) + '.png')
         self.env.ale.saveScreenPNG(filepath)
@@ -143,9 +134,12 @@ class CustomCallback(BaseCallback):
         #                                                        render=self.render,
         #                                                        deterministic=self.deterministic,
         #                                                        return_episode_rewards=True)
-        # pretty sure it is a list that gets appended per life?
+
+        # episode_rewards is a list that gets appended per epoch
+        # take the episode reward of the latest epoch
         print("step: ", CustomCallback.step,  " rew: ", self.locals['episode_rewards'][-1])
-        # episode rewards kind of weird, not sure if correct field is used
+
+       
         step_stats = { CustomCallback.step: {
                 'action': self.locals['env_action'],
                 'action_name': self.actions[self.locals['env_action']],

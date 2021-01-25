@@ -16,14 +16,13 @@ from stable_baselines.common.vec_env import DummyVecEnv
 from stable_baselines.common.cmd_util import make_vec_env
 import os, datetime
 
+# create folder and subfolders for data
 dir = 'data_' + datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + '/'
-print("HELLO")
-print("new dir", dir)
 os.makedirs(dir)
 subfolder = os.path.join(dir, 'screen')
 os.makedirs(subfolder)
-env = make_atari('MsPacmanNoFrameskip-v4')
 
+env = make_atari('MsPacmanNoFrameskip-v4')
 
 # get rid of distracting TF errors
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
