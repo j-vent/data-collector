@@ -21,6 +21,7 @@ class CustomCallback(BaseCallback):
     step = 1
     main_data_dict = OrderedDict()
     df_list = []
+    df_list_mod = []
     num_steps = 10
 
     def __init__(self, verbose=0, env_actions=[], env =None, num_steps=10, dir = 'results/'):
@@ -51,6 +52,18 @@ class CustomCallback(BaseCallback):
         # # to have access to the parent object
         # self.parent = None  # type: Optional[BaseCallback]
 
+    def make_dataframes_mod(self):
+        print("mod dictionary in make_df ", CustomCallback.main_data_dict[100])
+        # Make the main Dataframe
+        main_df = pd.DataFrame.from_dict(CustomCallback.main_data_dict, orient='index')
+
+        # call to save last items as seperate df
+        # self.save_last_line(args.stream_folder, main_df)
+        
+        # Now that we've parsed down the main df, load all into our list
+        # of DFs and our list of Names
+        self.df_list_mod.append(main_df)
+     
     # dataframe is a db table 
     def make_dataframes(self):
         # Make the main Dataframe
@@ -63,9 +76,19 @@ class CustomCallback(BaseCallback):
         # of DFs and our list of Names
         self.df_list.append(main_df)
 
-    def df_to_csv(self):
+    def df_to_csv(self, filename):
         for df in self.df_list:
-            filename = "df.csv"
+            # filename = "df.csv"
+            filepath = os.path.join(self.directory, filename)
+            print("Making csvs and path is: ")
+            print(filepath)
+            if os.path.exists(filepath):
+                df.to_csv(filepath, mode='a', index=False, header=False)
+            else:
+                df.to_csv(filepath, mode='a', index=False)
+    def df_to_csv_mod(self, filename):
+        for df in self.df_list_mod:
+            # filename = "df.csv"
             filepath = os.path.join(self.directory, filename)
             print("Making csvs and path is: ")
             print(filepath)
@@ -98,6 +121,37 @@ class CustomCallback(BaseCallback):
             observation = observations[i]
             self.save_frame(observation, self.save_file_screen, index)
 
+     # TODO: maybe move to a separate file 
+    def util(self):
+        total_life = total_game = steps_life = steps_game = 1
+        prev_life = 3
+
+        print("in util func")
+        for key, value in CustomCallback.main_data_dict.items():
+
+            # game over (epoch)
+            if(value['lives'] == 0):
+                # reset values
+                total_game += 1
+                total_life += 1
+                steps_game = steps_life = 1
+                
+            # lost a life (episode)
+            elif(value['lives'] != prev_life and prev_life != 0):
+                total_life += 1
+                # steps_game += steps_life
+                steps_life = 1
+
+            # normal step
+            prev_life = value['lives']
+            CustomCallback.main_data_dict[key]['total_life'] = total_life 
+            CustomCallback.main_data_dict[key]['total_game'] = total_game
+            CustomCallback.main_data_dict[key]['steps_life'] = steps_life
+            CustomCallback.main_data_dict[key]['steps_game'] = steps_game
+            steps_life += 1
+            steps_game += 1
+            # print("key ", key, " value ", value)
+            
 
     def _on_training_start(self) -> None:
         """
@@ -155,14 +209,26 @@ class CustomCallback(BaseCallback):
         
         # convert dict to different types
         if(CustomCallback.step == self.num_steps):
+            # print("dictionary ", CustomCallback.main_data_dict)
             self.make_dataframes()
-            self.df_to_csv()
+            self.df_to_csv("df_og.csv")
             self.df_to_parquet()
             # test if parquet file is correctly created
-            print("reading parquet file")
-            print(pd.read_parquet(os.path.join(self.directory,  "df.parquet")))
-            print("finished!!")
+            # print("reading parquet file")
+            # print(pd.read_parquet(os.path.join(self.directory,  "df.parquet")))
 
+            # calculate new info
+            self.util()
+            print("mod dictionary ", CustomCallback.main_data_dict[100])
+            self.make_dataframes_mod()
+            self.df_to_csv_mod("df_mod.csv")
+            # self.df_to_parquet()
+            # print("mod dict ", CustomCallback.main_data_dict)
+           
+            
+            # print("finished!!")
+
+   
 
     def _on_rollout_end(self) -> None:
         """
