@@ -7,6 +7,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 import numpy as np
 from collections import OrderedDict
+from tracker import Tracker
 
 class CustomCallback(BaseCallback):
     """
@@ -30,6 +31,7 @@ class CustomCallback(BaseCallback):
         self.env = env.unwrapped
         self.num_steps = num_steps
         self.directory = dir
+        
         # env <MaxAndSkipEnv<NoopResetEnv<TimeLimit<AtariEnv<MsPacmanNoFrameskip-v4>>>>>
         print("dir ", self.directory)
         print("env", env.unwrapped)
@@ -65,7 +67,7 @@ class CustomCallback(BaseCallback):
         self.df_list_mod.append(main_df)
      
     # dataframe is a db table 
-    def make_dataframes(self):
+    def make_dataframes(self, df):
         # Make the main Dataframe
         main_df = pd.DataFrame.from_dict(CustomCallback.main_data_dict, orient='index')
 
@@ -74,10 +76,11 @@ class CustomCallback(BaseCallback):
         
         # Now that we've parsed down the main df, load all into our list
         # of DFs and our list of Names
-        self.df_list.append(main_df)
+        # self.df_list.append(main_df)
+        df.append(main_df)
 
-    def df_to_csv(self, filename):
-        for df in self.df_list:
+    def df_to_csv(self, filename, df_list):
+        for df in df_list:
             # filename = "df.csv"
             filepath = os.path.join(self.directory, filename)
             print("Making csvs and path is: ")
@@ -86,6 +89,7 @@ class CustomCallback(BaseCallback):
                 df.to_csv(filepath, mode='a', index=False, header=False)
             else:
                 df.to_csv(filepath, mode='a', index=False)
+
     def df_to_csv_mod(self, filename):
         for df in self.df_list_mod:
             # filename = "df.csv"
@@ -151,21 +155,6 @@ class CustomCallback(BaseCallback):
             steps_life += 1
             steps_game += 1
             # print("key ", key, " value ", value)
-            
-
-    def _on_training_start(self) -> None:
-        """
-        This method is called before the first rollout starts.
-        """
-        pass
-
-    def _on_rollout_start(self) -> None:
-        """
-        A rollout is the collection of environment interaction
-        using the current policy.
-        This event is triggered before collecting new samples.
-        """
-        pass
 
     def _on_step(self) -> bool:
         """
@@ -176,9 +165,7 @@ class CustomCallback(BaseCallback):
 
         :return: (bool) If the callback returns False, training is aborted early.
         """
-        
-        # episode = life, epoch = game
-
+    
         # save screenshot to folder
         subfolder = os.path.join(self.directory, 'screen')
         filepath =  os.path.join(subfolder, 'screenshot' + str(CustomCallback.step) + '.png')
@@ -187,12 +174,25 @@ class CustomCallback(BaseCallback):
         #                                                        n_eval_episodes=self.n_eval_episodes,
         #                                                        render=self.render,
         #                                                        deterministic=self.deterministic,
+        # 
         #                                                        return_episode_rewards=True)
-
+        if(CustomCallback.step == 400):
+            # print("obs ", self.locals['obs'])
+            observation = self.locals['obs']
+            with open(self.directory + "obs.txt", "w") as text_file:
+                text_file.write(str(observation))
+                print("done")
+            imagePeeler = Tracker()
+            print("Check edge detection")
+            characters, bg_locs = imagePeeler.wheresPacman(observation)
+            # print("characters ", characters)
+            # print("bg_locs ", bg_locs)
+            
+        
         # episode_rewards is a list that gets appended per epoch
         # take the episode reward of the latest epoch
-        print("step: ", CustomCallback.step,  " rew: ", self.locals['episode_rewards'][-1])
-
+        
+        # print("step: ", CustomCallback.step,  " rew: ", self.locals['episode_rewards'][-1])
        
         step_stats = { CustomCallback.step: {
                 'action': self.locals['env_action'],
@@ -210,8 +210,8 @@ class CustomCallback(BaseCallback):
         # convert dict to different types
         if(CustomCallback.step == self.num_steps):
             # print("dictionary ", CustomCallback.main_data_dict)
-            self.make_dataframes()
-            self.df_to_csv("df_og.csv")
+            self.make_dataframes(self.df_list)
+            self.df_to_csv("df_og.csv", self.df_list)
             self.df_to_parquet()
             # test if parquet file is correctly created
             # print("reading parquet file")
@@ -219,27 +219,7 @@ class CustomCallback(BaseCallback):
 
             # calculate new info
             self.util()
-            print("mod dictionary ", CustomCallback.main_data_dict[100])
-            self.make_dataframes_mod()
-            self.df_to_csv_mod("df_mod.csv")
-            # self.df_to_parquet()
-            # print("mod dict ", CustomCallback.main_data_dict)
-           
-            
-            # print("finished!!")
-
-   
-
-    def _on_rollout_end(self) -> None:
-        """
-        This event is triggered before updating the policy.
-        """
-        pass
-
-    def _on_training_end(self) -> None:
-        """
-        This event is triggered before exiting the `learn()` method.
-        """
-        pass
-
+            self.make_dataframes(self.df_list_mod)
+            self.df_to_csv("df_mod.csv", self.df_list_mod)
+            self.df_to_parquet()
     

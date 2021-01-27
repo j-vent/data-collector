@@ -28,7 +28,7 @@ env = make_atari('MsPacmanNoFrameskip-v4')
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 # set num timesteps
-num_steps = 800
+num_steps = 1400
 
 # define callback object
 step_callback = CustomCallback(0,env.unwrapped.get_action_meanings(), env,  num_steps, dir)

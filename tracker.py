@@ -48,7 +48,7 @@ class Tracker():
     CHARACTERS = [pacman, red_ghost, pink_ghost, blue_ghost, orange_ghost]
     BGS = [bg, bg1, bg2, bg3]
 #    POWER_PILLS = [power_pill, power_pill1, power_pill2, power_pill3]
-    # set up background subtraction
+    # set up background subtraction -- foreground of img is extracted for further processing
     FGBG = cv2.createBackgroundSubtractorMOG2()
     # set variables
     FLOW = (0,0)
@@ -142,8 +142,10 @@ class Tracker():
     def wheresPacman(self, frame):
     
         bg_counter = 0
-                
+        
+        # apply mask 
         fgmask = self.FGBG.apply(frame, learningRate=0.5/self.HISTORY)
+        # convert colour why from gray?
         fgoutput = cv2.cvtColor(fgmask, cv2.COLOR_GRAY2RGB)
              
         height, width = frame.shape[:2]
@@ -187,6 +189,7 @@ class Tracker():
                         print("For character: ")
                         print(character.name)
                         character.set_coordinates(coord)
+                        # flow is motion of image between two frames
                         self.FLOW = self.get_flow(self.FLOW, character)
                         if (character.name == "Orange" or character.name == "Blue" or character.name == "Pink" or character.name == "Red"):
                             # set BG_LOCS to 0
