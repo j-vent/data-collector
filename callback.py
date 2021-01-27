@@ -8,6 +8,7 @@ import pyarrow.parquet as pq
 import numpy as np
 from collections import OrderedDict
 from tracker import Tracker
+import colour_detection as cd
 
 class CustomCallback(BaseCallback):
     """
@@ -53,18 +54,6 @@ class CustomCallback(BaseCallback):
         # # Sometimes, for event callback, it is useful
         # # to have access to the parent object
         # self.parent = None  # type: Optional[BaseCallback]
-
-    def make_dataframes_mod(self):
-        print("mod dictionary in make_df ", CustomCallback.main_data_dict[100])
-        # Make the main Dataframe
-        main_df = pd.DataFrame.from_dict(CustomCallback.main_data_dict, orient='index')
-
-        # call to save last items as seperate df
-        # self.save_last_line(args.stream_folder, main_df)
-        
-        # Now that we've parsed down the main df, load all into our list
-        # of DFs and our list of Names
-        self.df_list_mod.append(main_df)
      
     # dataframe is a db table 
     def make_dataframes(self, df):
@@ -89,18 +78,6 @@ class CustomCallback(BaseCallback):
                 df.to_csv(filepath, mode='a', index=False, header=False)
             else:
                 df.to_csv(filepath, mode='a', index=False)
-
-    def df_to_csv_mod(self, filename):
-        for df in self.df_list_mod:
-            # filename = "df.csv"
-            filepath = os.path.join(self.directory, filename)
-            print("Making csvs and path is: ")
-            print(filepath)
-            if os.path.exists(filepath):
-                df.to_csv(filepath, mode='a', index=False, header=False)
-            else:
-                df.to_csv(filepath, mode='a', index=False)
-           
 
     def df_to_parquet(self):
         for df in self.df_list:
@@ -154,6 +131,25 @@ class CustomCallback(BaseCallback):
             CustomCallback.main_data_dict[key]['steps_game'] = steps_game
             steps_life += 1
             steps_game += 1
+
+            # find coordinates
+            # subfolder = os.path.join(self.directory, 'screen')
+            dir = self.directory.replace("/", "")
+            filepath =  dir + "\screen\screenshot" + str(key) + ".png"
+            # print("filepath ", filepath)
+            
+            pacman_coord, pink_ghost_coord, red_ghost_coord, green_ghost_coord, orange_ghost_coord = cd.find_all_coords(filepath)
+            CustomCallback.main_data_dict[key]['pacman_coord_x'] = pacman_coord[0]
+            CustomCallback.main_data_dict[key]['pacman_coord_y'] = pacman_coord[1]
+            CustomCallback.main_data_dict[key]['pink_ghost_coord_x'] = pink_ghost_coord[0]
+            CustomCallback.main_data_dict[key]['pink_ghost_coord_y'] = pink_ghost_coord[1]
+            CustomCallback.main_data_dict[key]['red_ghost_coord_x'] = red_ghost_coord[0]
+            CustomCallback.main_data_dict[key]['red_ghost_coord_y'] = red_ghost_coord[1]
+            CustomCallback.main_data_dict[key]['green_ghost_coord_x'] = green_ghost_coord[0]
+            CustomCallback.main_data_dict[key]['green_ghost_coord_y'] = green_ghost_coord[1]
+            CustomCallback.main_data_dict[key]['orange_ghost_coord_x'] = orange_ghost_coord[0]
+            CustomCallback.main_data_dict[key]['orange_ghost_coord_y'] = orange_ghost_coord[1]
+
             # print("key ", key, " value ", value)
 
     def _on_step(self) -> bool:

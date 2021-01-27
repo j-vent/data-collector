@@ -22,13 +22,14 @@ os.makedirs(dir)
 subfolder = os.path.join(dir, 'screen')
 os.makedirs(subfolder)
 
+
 env = make_atari('MsPacmanNoFrameskip-v4')
 
 # get rid of distracting TF errors
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 # set num timesteps
-num_steps = 1400
+num_steps = 2000
 
 # define callback object
 step_callback = CustomCallback(0,env.unwrapped.get_action_meanings(), env,  num_steps, dir)
