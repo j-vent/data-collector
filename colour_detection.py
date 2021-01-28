@@ -2,6 +2,8 @@ import numpy as np
 import cv2 as cv
 from matplotlib import pyplot as plt
 
+# TODO: maybe make into a class ...
+
 def find_element_centroid(img, colour, coord):
     y,x = np.where(np.all(img == colour, axis=2))
     pairs = []
@@ -14,13 +16,16 @@ def find_element_centroid(img, colour, coord):
         coord[0] = round(coordx)
         coord[1] = round(coordy)
 
+# TODO: rewrite to put dist[0] elsewhere
 def find_distances(coord, dist):
     dist[0] = abs(coord[0] - pacman_coord[0]) + abs(coord[1] - pacman_coord[1])
-    print("dist", dist)
+    # print("dist", dist)
 
-# def check_pills():
-#     for()
-#     if(pacman_coord[0])
+def check_pills():
+    for i in range(4):
+        if(abs(pacman_coord[0] - pill_locs[i][0]) <= 3 and abs(pacman_coord[1] - pill_locs[i][1]) <= 3):
+            pill_eaten[i] = True
+        pill_dist[i] = abs(pacman_coord[0] - pill_locs[i][0]) + abs(pacman_coord[1] - pill_locs[i][1]) 
 
 # Declare colours. OpenCV uses BGR not RGB
 pacman_colour = [74, 164, 210]
@@ -37,6 +42,15 @@ red_ghost_coord = [0, 0]
 green_ghost_coord = [0, 0]
 orange_ghost_coord = [0, 0]
 
+
+# Declare distances 
+# TODO: make into one array :(
+to_pink_ghost = [0]
+to_red_ghost = [0]
+to_green_ghost = [0]
+to_orange_ghost = [0]
+
+# Declare pill info
 power_pill_top_left = [19.5, 18]
 power_pill_btm_left = [19.5, 150]
 power_pill_top_right = [300.5, 18]
@@ -44,21 +58,13 @@ power_pill_btm_right = [300.5, 150]
 pill_locs = []
 pill_locs.append(power_pill_top_left)
 pill_locs.append(power_pill_top_right)
+pill_locs.append(power_pill_btm_right)
+pill_locs.append(power_pill_btm_left)
+# pill 1,2,3,4
+pill_eaten = [False, False, False, False]
+# top left, top right, btm right, btm left
+pill_dist = [0,0,0,0]
 
-# Declare distances 
-to_pink_ghost = [0]
-to_red_ghost = [0]
-to_green_ghost = [0]
-to_orange_ghost = [0]
-to_pill_one = 0 # top left
-to_pill_two = 0 # top right
-to_pill_three = 0 # btm right
-to_pill_four = 0 # btm left
-
-pill_one_eaten = False
-pill_two_eaten = False
-pill_three_eaten = False
-pill_four_eaten = False
 
 def find_all_coords(im):
     img = cv.imread(im)
@@ -82,9 +88,9 @@ def find_all_coords(im):
     find_element_centroid(img, orange_ghost_colour, orange_ghost_coord)
     find_distances(orange_ghost_coord, to_orange_ghost)
 
-    # check_pills()
+    check_pills()
 
-    return pacman_coord, pink_ghost_coord, red_ghost_coord, green_ghost_coord, orange_ghost_coord, to_pink_ghost[0], to_red_ghost[0], to_green_ghost[0], to_orange_ghost[0]
+    return pacman_coord, pink_ghost_coord, red_ghost_coord, green_ghost_coord, orange_ghost_coord, to_pink_ghost[0], to_red_ghost[0], to_green_ghost[0], to_orange_ghost[0], pill_eaten, pill_dist
 
 # print("pacman coord ", pacman_coord)
 # print("pink ghost ", pink_ghost_coord)

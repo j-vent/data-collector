@@ -30,7 +30,7 @@ env = make_atari('MsPacmanNoFrameskip-v4')
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 # set num timesteps
-num_steps = 400
+num_steps = 4000
 
 # define callback object
 step_callback = CustomCallback(0,env.unwrapped.get_action_meanings(), env,  num_steps, dir)
@@ -38,10 +38,12 @@ step_callback = CustomCallback(0,env.unwrapped.get_action_meanings(), env,  num_
 
 # TODO: omit this and just pass in previously trained models
 # learning_rate set to 0 means it will act as a predict function
-model = DQN(CnnPolicy, env, verbose=1)
+# this:
+# model = DQN(CnnPolicy, env, verbose=1)
 # model = DQN.load("MsPacmanNoFrameSkip-v4.pkl")
 # "train" aka run prediction model with callback
-# model = DQN.load("deepq_pacman_callback")
+model = DQN.load("deepq_pacman_callback")
+model.set_env(env)
 model.learn(total_timesteps=num_steps, callback = step_callback) # 25000
 # model.save("deepq_pacman_callback")
 

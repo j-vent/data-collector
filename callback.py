@@ -115,8 +115,7 @@ class CustomCallback(BaseCallback):
             else:
                 CustomCallback.main_data_dict[key]['step_reward'] = value['episode_reward']  - CustomCallback.main_data_dict[key-1]['episode_reward']
 
-            print("step rew here")
-
+            
             # game over (epoch)
             if(value['lives'] == 0):
                 # reset values
@@ -144,8 +143,7 @@ class CustomCallback(BaseCallback):
             dir = self.directory.replace("/", "")
             filepath =  dir + "\screen\screenshot" + str(key) + ".png"
 
-            print("getting coords and stuff")
-            pacman_coord, pink_ghost_coord, red_ghost_coord, green_ghost_coord, orange_ghost_coord, to_pink_ghost, to_red_ghost, to_green_ghost, to_orange_ghost= cd.find_all_coords(filepath)
+            pacman_coord, pink_ghost_coord, red_ghost_coord, green_ghost_coord, orange_ghost_coord, to_pink_ghost, to_red_ghost, to_green_ghost, to_orange_ghost, pill_eaten, pill_dist = cd.find_all_coords(filepath)
             CustomCallback.main_data_dict[key]['pacman_coord_x'] = pacman_coord[0]
             CustomCallback.main_data_dict[key]['pacman_coord_y'] = pacman_coord[1]
             CustomCallback.main_data_dict[key]['pink_ghost_coord_x'] = pink_ghost_coord[0]
@@ -160,6 +158,15 @@ class CustomCallback(BaseCallback):
             CustomCallback.main_data_dict[key]['orange_ghost_coord_x'] = orange_ghost_coord[0]
             CustomCallback.main_data_dict[key]['orange_ghost_coord_y'] = orange_ghost_coord[1]
             CustomCallback.main_data_dict[key]['to_orange_ghost'] = to_orange_ghost
+            
+            CustomCallback.main_data_dict[key]['pill_one_eaten'] = pill_eaten[0]
+            CustomCallback.main_data_dict[key]['to_pill_one'] = pill_dist[0]
+            CustomCallback.main_data_dict[key]['pill_two_eaten'] = pill_eaten[1]
+            CustomCallback.main_data_dict[key]['to_pill_two'] = pill_dist[1]
+            CustomCallback.main_data_dict[key]['pill_three_eaten'] = pill_eaten[2]
+            CustomCallback.main_data_dict[key]['to_pill_three'] = pill_dist[2]
+            CustomCallback.main_data_dict[key]['pill_four_eaten'] = pill_eaten[3]
+            CustomCallback.main_data_dict[key]['to_pill_four'] = pill_dist[3]
 
 
     def _on_step(self) -> bool:
