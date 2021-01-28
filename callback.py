@@ -109,6 +109,13 @@ class CustomCallback(BaseCallback):
 
         print("in util func")
         for key, value in CustomCallback.main_data_dict.items():
+            
+            if(key < 2):
+                CustomCallback.main_data_dict[key]['step_reward'] = value['episode_reward'] 
+            else:
+                CustomCallback.main_data_dict[key]['step_reward'] = value['episode_reward']  - CustomCallback.main_data_dict[key-1]['episode_reward']
+
+            print("step rew here")
 
             # game over (epoch)
             if(value['lives'] == 0):
@@ -132,25 +139,28 @@ class CustomCallback(BaseCallback):
             steps_life += 1
             steps_game += 1
 
-            # find coordinates
-            # subfolder = os.path.join(self.directory, 'screen')
+            # find coordinates of pacman and ghosts
+            subfolder = os.path.join(self.directory, 'screen')
             dir = self.directory.replace("/", "")
             filepath =  dir + "\screen\screenshot" + str(key) + ".png"
-            # print("filepath ", filepath)
-            
-            pacman_coord, pink_ghost_coord, red_ghost_coord, green_ghost_coord, orange_ghost_coord = cd.find_all_coords(filepath)
+
+            print("getting coords and stuff")
+            pacman_coord, pink_ghost_coord, red_ghost_coord, green_ghost_coord, orange_ghost_coord, to_pink_ghost, to_red_ghost, to_green_ghost, to_orange_ghost= cd.find_all_coords(filepath)
             CustomCallback.main_data_dict[key]['pacman_coord_x'] = pacman_coord[0]
             CustomCallback.main_data_dict[key]['pacman_coord_y'] = pacman_coord[1]
             CustomCallback.main_data_dict[key]['pink_ghost_coord_x'] = pink_ghost_coord[0]
             CustomCallback.main_data_dict[key]['pink_ghost_coord_y'] = pink_ghost_coord[1]
+            CustomCallback.main_data_dict[key]['to_pink_ghost'] = to_pink_ghost
             CustomCallback.main_data_dict[key]['red_ghost_coord_x'] = red_ghost_coord[0]
             CustomCallback.main_data_dict[key]['red_ghost_coord_y'] = red_ghost_coord[1]
+            CustomCallback.main_data_dict[key]['to_red_ghost'] = to_red_ghost
             CustomCallback.main_data_dict[key]['green_ghost_coord_x'] = green_ghost_coord[0]
             CustomCallback.main_data_dict[key]['green_ghost_coord_y'] = green_ghost_coord[1]
+            CustomCallback.main_data_dict[key]['to_green_ghost'] = to_green_ghost
             CustomCallback.main_data_dict[key]['orange_ghost_coord_x'] = orange_ghost_coord[0]
             CustomCallback.main_data_dict[key]['orange_ghost_coord_y'] = orange_ghost_coord[1]
+            CustomCallback.main_data_dict[key]['to_orange_ghost'] = to_orange_ghost
 
-            # print("key ", key, " value ", value)
 
     def _on_step(self) -> bool:
         """
@@ -172,19 +182,8 @@ class CustomCallback(BaseCallback):
         #                                                        deterministic=self.deterministic,
         # 
         #                                                        return_episode_rewards=True)
-        if(CustomCallback.step == 400):
-            # print("obs ", self.locals['obs'])
-            observation = self.locals['obs']
-            with open(self.directory + "obs.txt", "w") as text_file:
-                text_file.write(str(observation))
-                print("done")
-            imagePeeler = Tracker()
-            print("Check edge detection")
-            characters, bg_locs = imagePeeler.wheresPacman(observation)
-            # print("characters ", characters)
-            # print("bg_locs ", bg_locs)
+    
             
-        
         # episode_rewards is a list that gets appended per epoch
         # take the episode reward of the latest epoch
         
@@ -218,4 +217,5 @@ class CustomCallback(BaseCallback):
             self.make_dataframes(self.df_list_mod)
             self.df_to_csv("df_mod.csv", self.df_list_mod)
             self.df_to_parquet()
+            print("done!")
     

@@ -24,12 +24,13 @@ os.makedirs(subfolder)
 
 
 env = make_atari('MsPacmanNoFrameskip-v4')
+# env = make_atari('SpaceInvadersNoFrameskip-v4')
 
 # get rid of distracting TF errors
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 # set num timesteps
-num_steps = 2000
+num_steps = 400
 
 # define callback object
 step_callback = CustomCallback(0,env.unwrapped.get_action_meanings(), env,  num_steps, dir)
@@ -37,9 +38,11 @@ step_callback = CustomCallback(0,env.unwrapped.get_action_meanings(), env,  num_
 
 # TODO: omit this and just pass in previously trained models
 # learning_rate set to 0 means it will act as a predict function
-model = DQN(CnnPolicy, env, verbose=1, learning_rate=0)
+model = DQN(CnnPolicy, env, verbose=1)
+# model = DQN.load("MsPacmanNoFrameSkip-v4.pkl")
 # "train" aka run prediction model with callback
+# model = DQN.load("deepq_pacman_callback")
 model.learn(total_timesteps=num_steps, callback = step_callback) # 25000
-model.save("deepq_pacman_callback")
+# model.save("deepq_pacman_callback")
 
 # Moved most functions to callback.py
