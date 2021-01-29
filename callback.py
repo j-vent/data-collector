@@ -10,6 +10,7 @@ from collections import OrderedDict
 from tracker import Tracker
 import colour_detection as cd
 
+
 class CustomCallback(BaseCallback):
     """
     A custom callback that derives from ``BaseCallback``.
@@ -26,7 +27,8 @@ class CustomCallback(BaseCallback):
     df_list_mod = []
     num_steps = 10
     isLives = False
-    def __init__(self, verbose=0, env_actions=[], env =None, num_steps=10, dir = 'results/', isLives = False):
+
+    def __init__(self, verbose=0, env_actions=[], env=None, num_steps=10, dir='results/', isLives=False):
         super(CustomCallback, self).__init__(verbose)
         self.actions = env_actions
         self.env = env.unwrapped
@@ -55,15 +57,16 @@ class CustomCallback(BaseCallback):
         # # Sometimes, for event callback, it is useful
         # # to have access to the parent object
         # self.parent = None  # type: Optional[BaseCallback]
-     
-    # dataframe is a db table 
+
+    # dataframe is a db table
     def make_dataframes(self, df):
         # Make the main Dataframe
-        main_df = pd.DataFrame.from_dict(CustomCallback.main_data_dict, orient='index')
+        main_df = pd.DataFrame.from_dict(
+            CustomCallback.main_data_dict, orient='index')
 
         # call to save last items as seperate df
         # self.save_last_line(args.stream_folder, main_df)
-        
+
         # Now that we've parsed down the main df, load all into our list
         # of DFs and our list of Names
         # self.df_list.append(main_df)
@@ -89,7 +92,6 @@ class CustomCallback(BaseCallback):
             table = pa.Table.from_pandas(df)
             # Parquet with Brotli compression
             pq.write_table(table, filepath, compression='BROTLI')
-            
 
     def save_frame(self, array, save_file, frame):
         if not (os.path.isdir(save_file)):
@@ -103,18 +105,19 @@ class CustomCallback(BaseCallback):
             observation = observations[i]
             self.save_frame(observation, self.save_file_screen, index)
 
-     # TODO: maybe move to a separate file 
+     # TODO: maybe move to a separate file
     def util(self):
         total_life = total_game = steps_life = steps_game = 1
         prev_life = 3
 
         print("in util func")
         for key, value in CustomCallback.main_data_dict.items():
-            
+
             if(key < 2):
-                CustomCallback.main_data_dict[key]['step_reward'] = value['episode_reward'] 
+                CustomCallback.main_data_dict[key]['step_reward'] = value['episode_reward']
             else:
-                CustomCallback.main_data_dict[key]['step_reward'] = value['episode_reward']  - CustomCallback.main_data_dict[key-1]['episode_reward']
+                CustomCallback.main_data_dict[key]['step_reward'] = value['episode_reward'] - \
+                    CustomCallback.main_data_dict[key-1]['episode_reward']
 
             if(self.isLives):
                 # game over (epoch)
@@ -123,7 +126,7 @@ class CustomCallback(BaseCallback):
                     total_game += 1
                     total_life += 1
                     steps_game = steps_life = 1
-                    
+
                 # lost a life (episode)
                 elif(value['lives'] != prev_life and prev_life != 0):
                     total_life += 1
@@ -133,44 +136,43 @@ class CustomCallback(BaseCallback):
                 # normal step
                 prev_life = value['lives']
                 CustomCallback.main_data_dict[key]['steps_life'] = steps_life
-                CustomCallback.main_data_dict[key]['total_life'] = total_life 
+                CustomCallback.main_data_dict[key]['total_life'] = total_life
                 CustomCallback.main_data_dict[key]['steps_game'] = steps_game
                 CustomCallback.main_data_dict[key]['total_game'] = total_game
-                
-                
+
                 steps_life += 1
                 steps_game += 1
 
             # find coordinates of pacman and ghosts
-            subfolder = os.path.join(self.directory, 'screen')
-            dir = self.directory.replace("/", "")
-            filepath =  dir + "\screen\screenshot" + str(key) + ".png"
+            # subfolder = os.path.join(self.directory, 'screen')
+            # dir = self.directory.replace("/", "")
+            # filepath = dir + "\screen\screenshot" + str(key) + ".png"
 
-            pacman_coord, pink_ghost_coord, red_ghost_coord, green_ghost_coord, orange_ghost_coord, to_pink_ghost, to_red_ghost, to_green_ghost, to_orange_ghost, pill_eaten, pill_dist = cd.find_all_coords(filepath)
-            CustomCallback.main_data_dict[key]['pacman_coord_x'] = pacman_coord[0]
-            CustomCallback.main_data_dict[key]['pacman_coord_y'] = pacman_coord[1]
-            CustomCallback.main_data_dict[key]['pink_ghost_coord_x'] = pink_ghost_coord[0]
-            CustomCallback.main_data_dict[key]['pink_ghost_coord_y'] = pink_ghost_coord[1]
-            CustomCallback.main_data_dict[key]['to_pink_ghost'] = to_pink_ghost
-            CustomCallback.main_data_dict[key]['red_ghost_coord_x'] = red_ghost_coord[0]
-            CustomCallback.main_data_dict[key]['red_ghost_coord_y'] = red_ghost_coord[1]
-            CustomCallback.main_data_dict[key]['to_red_ghost'] = to_red_ghost
-            CustomCallback.main_data_dict[key]['green_ghost_coord_x'] = green_ghost_coord[0]
-            CustomCallback.main_data_dict[key]['green_ghost_coord_y'] = green_ghost_coord[1]
-            CustomCallback.main_data_dict[key]['to_green_ghost'] = to_green_ghost
-            CustomCallback.main_data_dict[key]['orange_ghost_coord_x'] = orange_ghost_coord[0]
-            CustomCallback.main_data_dict[key]['orange_ghost_coord_y'] = orange_ghost_coord[1]
-            CustomCallback.main_data_dict[key]['to_orange_ghost'] = to_orange_ghost
-            
-            CustomCallback.main_data_dict[key]['pill_one_eaten'] = pill_eaten[0]
-            CustomCallback.main_data_dict[key]['to_pill_one'] = pill_dist[0]
-            CustomCallback.main_data_dict[key]['pill_two_eaten'] = pill_eaten[1]
-            CustomCallback.main_data_dict[key]['to_pill_two'] = pill_dist[1]
-            CustomCallback.main_data_dict[key]['pill_three_eaten'] = pill_eaten[2]
-            CustomCallback.main_data_dict[key]['to_pill_three'] = pill_dist[2]
-            CustomCallback.main_data_dict[key]['pill_four_eaten'] = pill_eaten[3]
-            CustomCallback.main_data_dict[key]['to_pill_four'] = pill_dist[3]
+            # pacman_coord, pink_ghost_coord, red_ghost_coord, green_ghost_coord, orange_ghost_coord, to_pink_ghost, to_red_ghost, to_green_ghost, to_orange_ghost, pill_eaten, pill_dist = cd.find_all_coords(
+            #     filepath)
+            # CustomCallback.main_data_dict[key]['pacman_coord_x'] = pacman_coord[0]
+            # CustomCallback.main_data_dict[key]['pacman_coord_y'] = pacman_coord[1]
+            # CustomCallback.main_data_dict[key]['pink_ghost_coord_x'] = pink_ghost_coord[0]
+            # CustomCallback.main_data_dict[key]['pink_ghost_coord_y'] = pink_ghost_coord[1]
+            # CustomCallback.main_data_dict[key]['to_pink_ghost'] = to_pink_ghost
+            # CustomCallback.main_data_dict[key]['red_ghost_coord_x'] = red_ghost_coord[0]
+            # CustomCallback.main_data_dict[key]['red_ghost_coord_y'] = red_ghost_coord[1]
+            # CustomCallback.main_data_dict[key]['to_red_ghost'] = to_red_ghost
+            # CustomCallback.main_data_dict[key]['green_ghost_coord_x'] = green_ghost_coord[0]
+            # CustomCallback.main_data_dict[key]['green_ghost_coord_y'] = green_ghost_coord[1]
+            # CustomCallback.main_data_dict[key]['to_green_ghost'] = to_green_ghost
+            # CustomCallback.main_data_dict[key]['orange_ghost_coord_x'] = orange_ghost_coord[0]
+            # CustomCallback.main_data_dict[key]['orange_ghost_coord_y'] = orange_ghost_coord[1]
+            # CustomCallback.main_data_dict[key]['to_orange_ghost'] = to_orange_ghost
 
+            # CustomCallback.main_data_dict[key]['pill_one_eaten'] = pill_eaten[0]
+            # CustomCallback.main_data_dict[key]['to_pill_one'] = pill_dist[0]
+            # CustomCallback.main_data_dict[key]['pill_two_eaten'] = pill_eaten[1]
+            # CustomCallback.main_data_dict[key]['to_pill_two'] = pill_dist[1]
+            # CustomCallback.main_data_dict[key]['pill_three_eaten'] = pill_eaten[2]
+            # CustomCallback.main_data_dict[key]['to_pill_three'] = pill_dist[2]
+            # CustomCallback.main_data_dict[key]['pill_four_eaten'] = pill_eaten[3]
+            # CustomCallback.main_data_dict[key]['to_pill_four'] = pill_dist[3]
 
     def _on_step(self) -> bool:
         """
@@ -181,39 +183,80 @@ class CustomCallback(BaseCallback):
 
         :return: (bool) If the callback returns False, training is aborted early.
         """
-    
+
         # save screenshot to folder
         subfolder = os.path.join(self.directory, 'screen')
-        filepath =  os.path.join(subfolder, 'screenshot' + str(CustomCallback.step) + '.png')
+        filepath = os.path.join(
+            subfolder, 'screenshot' + str(CustomCallback.step) + '.png')
         self.env.ale.saveScreenPNG(filepath)
+        
         # episode_rewards, episode_lengths = evaluate_policy(self.model, self.env,
         #                                                        n_eval_episodes=self.n_eval_episodes,
         #                                                        render=self.render,
         #                                                        deterministic=self.deterministic,
-        # 
+        #
         #                                                        return_episode_rewards=True)
-    
-            
+
         # episode_rewards is a list that gets appended per epoch
         # take the episode reward of the latest epoch
-        
+
         # print("step: ", CustomCallback.step,  " rew: ", self.locals['episode_rewards'][-1])
-        
-        step_stats = { CustomCallback.step: {
-                'action': self.locals['env_action'],
-                'action_name': self.actions[self.locals['env_action']],
-                'episode_reward': self.locals['episode_rewards'][-1],
-                'state': CustomCallback.step 
-                # 'lives':self.locals['info']['ale.lives']
-            }
+        if(CustomCallback.step % 1000 == 0):
+            print("at step ", str(CustomCallback.step))
+        step_stats = {CustomCallback.step: {
+            'action': self.locals['env_action'],
+            'action_name': self.actions[self.locals['env_action']],
+            'episode_reward': self.locals['episode_rewards'][-1],
+            'state': CustomCallback.step
+            # 'lives':self.locals['info']['ale.lives']
         }
-        
-        # add step to dict 
+        }
+
+        # add step to dict
         CustomCallback.main_data_dict.update(step_stats)
         if(self.isLives == True):
             CustomCallback.main_data_dict[CustomCallback.step]['lives'] = self.locals['info']['ale.lives']
 
-        CustomCallback.step = CustomCallback.step + 1
+        
+        # find coordinates of pacman and ghosts
+        key = CustomCallback.step
+        # subfolder = os.path.join(self.directory, 'screen')
+        # dir = self.directory.replace("/", "")
+        # filepath = dir + "\screen\screenshot" + str(key) + ".png"
+
+        
+        pacman_coord, pink_ghost_coord, red_ghost_coord, green_ghost_coord, orange_ghost_coord, to_pink_ghost, to_red_ghost, to_green_ghost, to_orange_ghost, pill_eaten, pill_dist = cd.find_all_coords(
+            filepath)
+        CustomCallback.main_data_dict[key]['pacman_coord_x'] = pacman_coord[0]
+        CustomCallback.main_data_dict[key]['pacman_coord_y'] = pacman_coord[1]
+        CustomCallback.main_data_dict[key]['pink_ghost_coord_x'] = pink_ghost_coord[0]
+        CustomCallback.main_data_dict[key]['pink_ghost_coord_y'] = pink_ghost_coord[1]
+        CustomCallback.main_data_dict[key]['to_pink_ghost'] = to_pink_ghost
+        CustomCallback.main_data_dict[key]['red_ghost_coord_x'] = red_ghost_coord[0]
+        CustomCallback.main_data_dict[key]['red_ghost_coord_y'] = red_ghost_coord[1]
+        CustomCallback.main_data_dict[key]['to_red_ghost'] = to_red_ghost
+        CustomCallback.main_data_dict[key]['green_ghost_coord_x'] = green_ghost_coord[0]
+        CustomCallback.main_data_dict[key]['green_ghost_coord_y'] = green_ghost_coord[1]
+        CustomCallback.main_data_dict[key]['to_green_ghost'] = to_green_ghost
+        CustomCallback.main_data_dict[key]['orange_ghost_coord_x'] = orange_ghost_coord[0]
+        CustomCallback.main_data_dict[key]['orange_ghost_coord_y'] = orange_ghost_coord[1]
+        CustomCallback.main_data_dict[key]['to_orange_ghost'] = to_orange_ghost
+
+        CustomCallback.main_data_dict[key]['pill_one_eaten'] = pill_eaten[0]
+        CustomCallback.main_data_dict[key]['to_pill_one'] = pill_dist[0]
+        CustomCallback.main_data_dict[key]['pill_two_eaten'] = pill_eaten[1]
+        CustomCallback.main_data_dict[key]['to_pill_two'] = pill_dist[1]
+        CustomCallback.main_data_dict[key]['pill_three_eaten'] = pill_eaten[2]
+        CustomCallback.main_data_dict[key]['to_pill_three'] = pill_dist[2]
+        CustomCallback.main_data_dict[key]['pill_four_eaten'] = pill_eaten[3]
+        CustomCallback.main_data_dict[key]['to_pill_four'] = pill_dist[3]
+
+        # remove ss
+        if os.path.exists(filepath):
+            os.remove(filepath)
+        else:
+            print("screenshot does not exist")
+
         
         # convert dict to different types
         if(CustomCallback.step == self.num_steps):
@@ -229,6 +272,6 @@ class CustomCallback(BaseCallback):
             self.util()
             self.make_dataframes(self.df_list_mod)
             self.df_to_csv("df_mod.csv", self.df_list_mod)
-            self.df_to_parquet()
+            # self.df_to_parquet()
             print("done!")
-    
+        CustomCallback.step = CustomCallback.step + 1
