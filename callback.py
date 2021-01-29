@@ -25,14 +25,15 @@ class CustomCallback(BaseCallback):
     df_list = []
     df_list_mod = []
     num_steps = 10
-
-    def __init__(self, verbose=0, env_actions=[], env =None, num_steps=10, dir = 'results/'):
+    isLives = False
+    def __init__(self, verbose=0, env_actions=[], env =None, num_steps=10, dir = 'results/', isLives = False):
         super(CustomCallback, self).__init__(verbose)
         self.actions = env_actions
         self.env = env.unwrapped
         self.num_steps = num_steps
         self.directory = dir
-        
+        self.isLives = isLives
+        print("game has lives? ", self.isLives)
         # env <MaxAndSkipEnv<NoopResetEnv<TimeLimit<AtariEnv<MsPacmanNoFrameskip-v4>>>>>
         print("dir ", self.directory)
         print("env", env.unwrapped)
@@ -115,28 +116,30 @@ class CustomCallback(BaseCallback):
             else:
                 CustomCallback.main_data_dict[key]['step_reward'] = value['episode_reward']  - CustomCallback.main_data_dict[key-1]['episode_reward']
 
-            
-            # game over (epoch)
-            if(value['lives'] == 0):
-                # reset values
-                total_game += 1
-                total_life += 1
-                steps_game = steps_life = 1
-                
-            # lost a life (episode)
-            elif(value['lives'] != prev_life and prev_life != 0):
-                total_life += 1
-                # steps_game += steps_life
-                steps_life = 1
+            if(self.isLives):
+                # game over (epoch)
+                if(value['lives'] == 0):
+                    # reset values
+                    total_game += 1
+                    total_life += 1
+                    steps_game = steps_life = 1
+                    
+                # lost a life (episode)
+                elif(value['lives'] != prev_life and prev_life != 0):
+                    total_life += 1
+                    # steps_game += steps_life
+                    steps_life = 1
 
-            # normal step
-            prev_life = value['lives']
-            CustomCallback.main_data_dict[key]['total_life'] = total_life 
-            CustomCallback.main_data_dict[key]['total_game'] = total_game
-            CustomCallback.main_data_dict[key]['steps_life'] = steps_life
-            CustomCallback.main_data_dict[key]['steps_game'] = steps_game
-            steps_life += 1
-            steps_game += 1
+                # normal step
+                prev_life = value['lives']
+                CustomCallback.main_data_dict[key]['steps_life'] = steps_life
+                CustomCallback.main_data_dict[key]['total_life'] = total_life 
+                CustomCallback.main_data_dict[key]['steps_game'] = steps_game
+                CustomCallback.main_data_dict[key]['total_game'] = total_game
+                
+                
+                steps_life += 1
+                steps_game += 1
 
             # find coordinates of pacman and ghosts
             subfolder = os.path.join(self.directory, 'screen')
@@ -195,18 +198,21 @@ class CustomCallback(BaseCallback):
         # take the episode reward of the latest epoch
         
         # print("step: ", CustomCallback.step,  " rew: ", self.locals['episode_rewards'][-1])
-       
+        
         step_stats = { CustomCallback.step: {
                 'action': self.locals['env_action'],
                 'action_name': self.actions[self.locals['env_action']],
                 'episode_reward': self.locals['episode_rewards'][-1],
-                'state': CustomCallback.step,
-                'lives':self.locals['info']['ale.lives']
+                'state': CustomCallback.step 
+                # 'lives':self.locals['info']['ale.lives']
             }
         }
-
-        # add step to dict and increment static step variable
+        
+        # add step to dict 
         CustomCallback.main_data_dict.update(step_stats)
+        if(self.isLives == True):
+            CustomCallback.main_data_dict[CustomCallback.step]['lives'] = self.locals['info']['ale.lives']
+
         CustomCallback.step = CustomCallback.step + 1
         
         # convert dict to different types
