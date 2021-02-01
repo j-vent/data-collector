@@ -35,23 +35,23 @@ parser.add_argument('--lives', help='env has lives', action='store_true', defaul
 args = parser.parse_args()
 isLives = args.lives
 # set num timesteps
-num_steps = 300000
+num_steps = 3000
 
 # define callback object
 step_callback = CustomCallback(0,env.unwrapped.get_action_meanings(), env,  num_steps, dir, isLives)
 
 
 # train:
-model = DQN(CnnPolicy, env, verbose=1)
+# model = DQN(CnnPolicy, env, verbose=1)
 
-# use pretrained:
-#model = DQN.load("deepq_pacman_300K")
-#model.set_env(env)
+# use pretrained model:
+model = DQN.load("deepq_pacman_300K")
+model.set_env(env)
 
 
 # learning_rate set to 0 means it will act as a predict function
 model.learn(total_timesteps=num_steps, callback = step_callback) # 25000
 
 # save model:
-model.save("deepq_pacman_300K")
+# model.save("deepq_pacman_300K")
 

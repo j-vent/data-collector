@@ -7,7 +7,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 import numpy as np
 from collections import OrderedDict
-from tracker import Tracker
+from tracker import GhostTracker
 import colour_detection as cd
 
 
@@ -109,26 +109,36 @@ class CustomCallback(BaseCallback):
     def util(self):
         total_life = total_game = steps_life = steps_game = 1
         prev_life = 3
-
+        # episode_reward = 0
+        total_reward = 0
+        game_reward = 0
         print("in util func")
         for key, value in CustomCallback.main_data_dict.items():
 
             if(key < 2):
-                CustomCallback.main_data_dict[key]['step_reward'] = value['episode_reward']
+                CustomCallback.main_data_dict[key]['step_reward'] = value['cumulative_episode_reward']
             else:
-                CustomCallback.main_data_dict[key]['step_reward'] = value['episode_reward'] - \
-                    CustomCallback.main_data_dict[key-1]['episode_reward']
+                CustomCallback.main_data_dict[key]['step_reward'] = value['cumulative_episode_reward'] - \
+                    CustomCallback.main_data_dict[key-1]['cumulative_episode_reward']
 
             if(self.isLives):
                 # game over (epoch)
                 if(value['lives'] == 0):
+                    # not sure if this is correct
+                    # total_reward += game_reward
+                    CustomCallback.main_data_dict[key]['game_reward'] = game_reward
                     # reset values
                     total_game += 1
                     total_life += 1
                     steps_game = steps_life = 1
+                    game_reward = 0
 
                 # lost a life (episode)
                 elif(value['lives'] != prev_life and prev_life != 0):
+                    # not sure if this is correct
+                    CustomCallback.main_data_dict[key]['episode_reward'] = value['cumulative_episode_reward']
+                    game_reward += value['cumulative_episode_reward']
+                    total_reward += value['cumulative_episode_reward']
                     total_life += 1
                     # steps_game += steps_life
                     steps_life = 1
@@ -142,7 +152,7 @@ class CustomCallback(BaseCallback):
 
                 steps_life += 1
                 steps_game += 1
-
+        CustomCallback.main_data_dict[self.num_steps]['total_reward'] = total_reward
             # find coordinates of pacman and ghosts
             # subfolder = os.path.join(self.directory, 'screen')
             # dir = self.directory.replace("/", "")
@@ -173,6 +183,8 @@ class CustomCallback(BaseCallback):
             # CustomCallback.main_data_dict[key]['to_pill_three'] = pill_dist[2]
             # CustomCallback.main_data_dict[key]['pill_four_eaten'] = pill_eaten[3]
             # CustomCallback.main_data_dict[key]['to_pill_four'] = pill_dist[3]
+
+        # TODO: display total reward somewhere?? 
 
     def _on_step(self) -> bool:
         """
@@ -206,7 +218,7 @@ class CustomCallback(BaseCallback):
         step_stats = {CustomCallback.step: {
             'action': self.locals['env_action'],
             'action_name': self.actions[self.locals['env_action']],
-            'episode_reward': self.locals['episode_rewards'][-1],
+            'cumulative_episode_reward': self.locals['episode_rewards'][-1],
             'state': CustomCallback.step
             # 'lives':self.locals['info']['ale.lives']
         }
@@ -251,11 +263,18 @@ class CustomCallback(BaseCallback):
         CustomCallback.main_data_dict[key]['pill_four_eaten'] = pill_eaten[3]
         CustomCallback.main_data_dict[key]['to_pill_four'] = pill_dist[3]
 
-        # remove ss
-        if os.path.exists(filepath):
-            os.remove(filepath)
-        else:
-            print("screenshot does not exist")
+        # find blue ghosts
+        if(CustomCallback.step % 1000 == 0):
+            imagePeeler = GhostTracker()
+            print("About to seek pacman")
+            characters, bg_locs = imagePeeler.wheresPacman(self.locals['obs'])
+            print("chars ",characters)
+            print("bglocs ", bg_locs)
+        # remove screenshot
+        # if os.path.exists(filepath):
+        #     os.remove(filepath)
+        # else:
+        #     print("screenshot does not exist")
 
         
         # convert dict to different types

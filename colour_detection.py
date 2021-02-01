@@ -34,6 +34,9 @@ red_ghost_colour = [72, 72, 200]
 # called blue ghost sometimes?
 green_ghost_colour = [153, 184, 84]
 orange_ghost_colour = [48, 122, 180]
+# 87 pixels per ghost, estimate as circle means radius is about 5 pixels
+dark_blue_ghost = [194, 114, 66]
+
 
 # Declare and initialize coordinates 
 pacman_coord = [0, 0]
