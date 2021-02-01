@@ -7,7 +7,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 import numpy as np
 from collections import OrderedDict
-from tracker import GhostTracker
+from ghost_tracker import GhostTracker
 import colour_detection as cd
 
 
@@ -237,7 +237,7 @@ class CustomCallback(BaseCallback):
         # filepath = dir + "\screen\screenshot" + str(key) + ".png"
 
         
-        pacman_coord, pink_ghost_coord, red_ghost_coord, green_ghost_coord, orange_ghost_coord, to_pink_ghost, to_red_ghost, to_green_ghost, to_orange_ghost, pill_eaten, pill_dist = cd.find_all_coords(
+        pacman_coord, pink_ghost_coord, red_ghost_coord, green_ghost_coord, orange_ghost_coord, to_pink_ghost, to_red_ghost, to_green_ghost, to_orange_ghost, pill_eaten, pill_dist, hasBlueGhost = cd.find_all_coords(
             filepath)
         CustomCallback.main_data_dict[key]['pacman_coord_x'] = pacman_coord[0]
         CustomCallback.main_data_dict[key]['pacman_coord_y'] = pacman_coord[1]
@@ -263,13 +263,26 @@ class CustomCallback(BaseCallback):
         CustomCallback.main_data_dict[key]['pill_four_eaten'] = pill_eaten[3]
         CustomCallback.main_data_dict[key]['to_pill_four'] = pill_dist[3]
 
-        # find blue ghosts
-        if(CustomCallback.step % 1000 == 0):
+        # find blue ghosts, if any
+        if(hasBlueGhost):
             imagePeeler = GhostTracker()
-            print("About to seek pacman")
-            characters, bg_locs = imagePeeler.wheresPacman(self.locals['obs'])
-            print("chars ",characters)
-            print("bglocs ", bg_locs)
+            print("About to seek pacman at ", CustomCallback.step)
+            ghost_coords = imagePeeler.wheresPacman(self.locals['obs'])
+            if(ghost_coords[0] != -1):
+                CustomCallback.main_data_dict[key]['dark_blue_ghost1_coord_x'] = ghost_coords[0]
+                CustomCallback.main_data_dict[key]['dark_blue_ghost1_coord_y'] = ghost_coords[1]
+            if(ghost_coords[2] != -1):
+                CustomCallback.main_data_dict[key]['dark_blue_ghost2_coord_x'] = ghost_coords[2]
+                CustomCallback.main_data_dict[key]['dark_blue_ghost2_coord_y'] = ghost_coords[3]
+            if(ghost_coords[4] != -1):
+                CustomCallback.main_data_dict[key]['dark_blue_ghost3_coord_x'] = ghost_coords[4]
+                CustomCallback.main_data_dict[key]['dark_blue_ghost3_coord_y'] = ghost_coords[5]
+            if(ghost_coords[6] != -1):
+                CustomCallback.main_data_dict[key]['dark_blue_ghost4_coord_x'] = ghost_coords[6]
+                CustomCallback.main_data_dict[key]['dark_blue_ghost4_coord_y'] = ghost_coords[7]
+
+            # print("!!!coords ", ghost_coords)
+
         # remove screenshot
         # if os.path.exists(filepath):
         #     os.remove(filepath)

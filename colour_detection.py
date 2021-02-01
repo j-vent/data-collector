@@ -21,6 +21,13 @@ def find_distances(coord, dist):
     dist[0] = abs(coord[0] - pacman_coord[0]) + abs(coord[1] - pacman_coord[1])
     # print("dist", dist)
 
+def find_blue_ghosts(img):
+    y,x = np.where(np.all(img == dark_blue_ghost, axis=2))
+    if(len(x) == 0 and len(y) == 0):
+        return False
+    else:
+        return True
+
 def check_pills():
     for i in range(4):
         if(abs(pacman_coord[0] - pill_locs[i][0]) <= 3 and abs(pacman_coord[1] - pill_locs[i][1]) <= 3):
@@ -93,7 +100,9 @@ def find_all_coords(im):
 
     check_pills()
 
-    return pacman_coord, pink_ghost_coord, red_ghost_coord, green_ghost_coord, orange_ghost_coord, to_pink_ghost[0], to_red_ghost[0], to_green_ghost[0], to_orange_ghost[0], pill_eaten, pill_dist
+    hasBlueGhost = find_blue_ghosts(img)
+
+    return pacman_coord, pink_ghost_coord, red_ghost_coord, green_ghost_coord, orange_ghost_coord, to_pink_ghost[0], to_red_ghost[0], to_green_ghost[0], to_orange_ghost[0], pill_eaten, pill_dist, hasBlueGhost
 
 # print("pacman coord ", pacman_coord)
 # print("pink ghost ", pink_ghost_coord)
