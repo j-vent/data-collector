@@ -22,11 +22,12 @@ def find_distances(coord, dist):
     # print("dist", dist)
 
 def find_blue_ghosts(img):
-    y,x = np.where(np.all(img == dark_blue_ghost, axis=2))
-    if(len(x) == 0 and len(y) == 0):
-        return False
-    else:
-        return True
+    image = cv.cvtColor(img, cv.COLOR_BGR2HSV)
+    lower_blue = np.array([60, 100, 188])
+    upper_blue = np.array([150,255, 255])
+    mask = cv.inRange(image, lower_blue, upper_blue)
+    # print("nonzero ", np.count_nonzero(mask))
+    return np.count_nonzero(mask) > 0
 
 def check_pills():
     for i in range(4):
@@ -41,7 +42,7 @@ red_ghost_colour = [72, 72, 200]
 # called blue ghost sometimes?
 green_ghost_colour = [153, 184, 84]
 orange_ghost_colour = [48, 122, 180]
-# 87 pixels per ghost, estimate as circle means radius is about 5 pixels
+# 116 pixels per ghost, estimate as circle means radius is about 5 pixels
 dark_blue_ghost = [194, 114, 66]
 
 

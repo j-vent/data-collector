@@ -109,7 +109,7 @@ class CustomCallback(BaseCallback):
     def util(self):
         total_life = total_game = steps_life = steps_game = 1
         prev_life = 3
-        # episode_reward = 0
+        episode_reward = 0
         total_reward = 0
         game_reward = 0
         print("in util func")
@@ -118,8 +118,13 @@ class CustomCallback(BaseCallback):
             if(key < 2):
                 CustomCallback.main_data_dict[key]['step_reward'] = value['cumulative_episode_reward']
             else:
-                CustomCallback.main_data_dict[key]['step_reward'] = value['cumulative_episode_reward'] - \
-                    CustomCallback.main_data_dict[key-1]['cumulative_episode_reward']
+                if( CustomCallback.main_data_dict[key-1]['lives'] == 0):
+                    CustomCallback.main_data_dict[key]['step_reward'] = 0
+                else:
+                    CustomCallback.main_data_dict[key]['step_reward'] = value['cumulative_episode_reward'] - \
+                        CustomCallback.main_data_dict[key-1]['cumulative_episode_reward']
+                
+            episode_reward += CustomCallback.main_data_dict[key]['step_reward'] 
 
             if(self.isLives):
                 # game over (epoch)
@@ -127,26 +132,33 @@ class CustomCallback(BaseCallback):
                     # not sure if this is correct
                     # total_reward += game_reward
                     CustomCallback.main_data_dict[key]['game_reward'] = game_reward
+                    CustomCallback.main_data_dict[key]['total_life'] = total_life
+                    CustomCallback.main_data_dict[key]['episode_reward'] = episode_reward
                     # reset values
                     total_game += 1
                     total_life += 1
                     steps_game = steps_life = 1
                     game_reward = 0
+                    episode_reward = 0
 
                 # lost a life (episode)
-                elif(value['lives'] != prev_life and prev_life != 0):
+                # elif(value['lives'] != prev_life and prev_life != 0):
+                # record BEFORE lives is decremented
+                elif(key != self.num_steps and value['lives'] != CustomCallback.main_data_dict[key+1]['lives']):
                     # not sure if this is correct
-                    CustomCallback.main_data_dict[key]['episode_reward'] = value['cumulative_episode_reward']
-                    game_reward += value['cumulative_episode_reward']
-                    total_reward += value['cumulative_episode_reward']
+                    CustomCallback.main_data_dict[key]['total_life'] = total_life
+                    CustomCallback.main_data_dict[key]['episode_reward'] = episode_reward
+                    game_reward += episode_reward
+                    total_reward += episode_reward
                     total_life += 1
                     # steps_game += steps_life
                     steps_life = 1
+                    episode_reward = 0
 
                 # normal step
                 prev_life = value['lives']
                 CustomCallback.main_data_dict[key]['steps_life'] = steps_life
-                CustomCallback.main_data_dict[key]['total_life'] = total_life
+                
                 CustomCallback.main_data_dict[key]['steps_game'] = steps_game
                 CustomCallback.main_data_dict[key]['total_game'] = total_game
 
@@ -266,7 +278,7 @@ class CustomCallback(BaseCallback):
         # find blue ghosts, if any
         if(hasBlueGhost):
             imagePeeler = GhostTracker()
-            print("About to seek pacman at ", CustomCallback.step)
+            # print("About to seek pacman at ", CustomCallback.step)
             ghost_coords = imagePeeler.wheresPacman(self.locals['obs'])
             if(ghost_coords[0] != -1):
                 CustomCallback.main_data_dict[key]['dark_blue_ghost1_coord_x'] = ghost_coords[0]

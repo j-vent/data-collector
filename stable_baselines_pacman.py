@@ -46,6 +46,7 @@ step_callback = CustomCallback(0,env.unwrapped.get_action_meanings(), env,  num_
 
 # use pretrained model:
 model = DQN.load("deepq_pacman_300K")
+# model = DQN.load("deepq_pacman_random")
 model.set_env(env)
 
 
