@@ -132,11 +132,11 @@ class CustomCallback(BaseCallback):
                     # not sure if this is correct
                     # total_reward += game_reward
                     CustomCallback.main_data_dict[key]['game_reward'] = game_reward
-                    CustomCallback.main_data_dict[key]['total_life'] = total_life
-                    CustomCallback.main_data_dict[key]['episode_reward'] = episode_reward
+                    # CustomCallback.main_data_dict[key]['total_life'] = total_life
+                    # CustomCallback.main_data_dict[key]['episode_reward'] = episode_reward
                     # reset values
                     total_game += 1
-                    total_life += 1
+                    # total_life += 1
                     steps_game = steps_life = 1
                     game_reward = 0
                     episode_reward = 0

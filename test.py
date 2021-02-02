@@ -33,15 +33,17 @@
 import numpy as np
 import cv2
 
-image = cv2.imread('blueghostfour.png')
+image = cv2.imread('screenshot112.png')
+#image = cv2.imread('testghost.png')
+#image = cv2.imread('blueghostfour.png')
 result = image.copy()
 image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 lower = np.array([155,25,0])
-upper = np.array([179,255,255])
+upper = np.array([255,255,255])
 # BGR # [194, 114, 66] [60, 100, 188], [70, 120, 200]
 # 218 66 76
 lower_blue = np.array([60, 100, 188])
-upper_blue = np.array([255,255, 255])
+upper_blue = np.array([150,255, 255])
 mask = cv2.inRange(image, lower_blue, upper_blue)
 # mask = cv2.inRange(image, np.array([100, 0, 0]), np.array([100, 0, 0]))
 result = cv2.bitwise_and(result, result, mask=mask)

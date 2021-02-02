@@ -183,8 +183,8 @@ class GhostTracker():
                 colour4 = frame[coord[1] + offset][coord[0]]
             except:
                 colour4 = [0,0,0]
-            print("**************")
-            print("Found color0: " + str(colour0) + " and " + str(colour1) + " and " + str(colour2) + " and " + str(colour3) + " and " + str(colour4))
+            # print("**************")
+            # print("Found color0: " + str(colour0) + " and " + str(colour1) + " and " + str(colour2) + " and " + str(colour3) + " and " + str(colour4))
 
             # loop all characters and attempt to match colour
             for character in self.CHARACTERS:
@@ -237,11 +237,11 @@ class GhostTracker():
                 self.draw_contour(contour, fgoutput, coord, bg)
                 self.BG_LOCS.append(coord)
                 # print("Found color0: " + str(colour0) + " and " + str(colour1) + " and " + str(colour2) + " and " + str(colour3) + " and " + str(colour4))
-                print("Found ghost " + str(bg.name))
-                print("at: " + str(bg.current_coord))
+                # print("Found ghost " + str(bg.name))
+                # print("at: " + str(bg.current_coord))
                 # print("here: ", str(bg.name)[-1].strip())
                 s = str(bg.name)[-1].strip()
-                print("s", s.strip(), "done")
+                # print("s", s.strip(), "done")
                 num = starting_index[int(s)] # 2 [0,1,2,3,4,5,6,7]
                                             #      1   2   3   4
                 # print("num ", num)
