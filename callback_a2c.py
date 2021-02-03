@@ -230,24 +230,24 @@ class CustomCallback(BaseCallback):
         # take the episode reward of the latest epoch
 
         # print("step: ", CustomCallback.step,  " rew: ", self.locals['episode_rewards'][-1])
-        # if(CustomCallback.step == 1 or CustomCallback.step  == 2) :
-        print("at step ", str(CustomCallback.step))
+        if(CustomCallback.step  == 1) :
+        #print("at step ", str(CustomCallback.step))
         #print("locals ", self.locals)
-        print("rew", self.locals['rewards'])
-        print("action3", self.locals['actions'])
-        # step_stats = {CustomCallback.step: {
-        #     'action': self.locals['mb_actions'][-1],
-        #     # 'action_name': self.actions[self.locals['mb_actions'][-1]],
-        #     'cumulative_episode_reward': self.locals['mb_rewards'][-1],
-        #     'state': CustomCallback.step
-        #     # 'lives':self.locals['info']['ale.lives']
-        # }
-        # }
+        #print("actions", self.locals['mb_actions'])
+            print("locals", self.locals)
+        step_stats = {CustomCallback.step: {
+            'action': self.locals['mb_actions'][-1],
+            'action_name': self.actions[self.locals['actions'][0]],
+            'cumulative_episode_reward': self.locals['rewards'],
+            'state': CustomCallback.step,
+            #'lives':self.locals['infos']['ale.lives']
+            }
+        }
 
-        # add step to dict
-        # CustomCallback.main_data_dict.update(step_stats)
-        # if(self.isLives == True):
-        #     CustomCallback.main_data_dict[CustomCallback.step]['lives'] = self.locals['info']['ale.lives']
+        #add step to dict
+        CustomCallback.main_data_dict.update(step_stats)
+        if(self.isLives == True and CustomCallback.step >= 2):
+            CustomCallback.main_data_dict[CustomCallback.step]['lives'] = self.locals['info']['ale.lives']
         
         
         # find coordinates of pacman and ghosts

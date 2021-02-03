@@ -37,7 +37,7 @@ parser.add_argument('--lives', help='env has lives', action='store_true', defaul
 args = parser.parse_args()
 isLives = args.lives
 # set num timesteps
-num_steps = 60
+num_steps = 100
 
 # define callback object
 step_callback = CustomCallback(0, actions, env,  num_steps, dir, isLives, og_env)
