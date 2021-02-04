@@ -19,9 +19,12 @@ from stable_baselines.common.cmd_util import make_vec_env
 import os, datetime
 import argparse
 
+
+# get rid of distracting TF errors
+tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
+
 # create folder and subfolders for data
-dir = 'ac2_data_' + datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + '/'
-# dir = 'a2c_pacman_100k_test'
+dir = 'ppo2_data_100K' + datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + '/'
 os.makedirs(dir)
 subfolder = os.path.join(dir, 'screen')
 os.makedirs(subfolder)
@@ -30,29 +33,24 @@ os.makedirs(subfolder)
 log_dir = "/tmp/gym/"
 os.makedirs(log_dir, exist_ok=True)
 
-# og_env = make_atari('MsPacmanNoFrameskip-v4')
-# actions = make_atari('MsPacmanNoFrameskip-v4').unwrapped.get_action_meanings()
-# env = Monitor(og_env, log_dir)
-# env = DummyVecEnv([lambda: og_env])
-
+# Create and wrap the environment, equivalent to:
+# env = make_vec_env('MountainCarContinuous-v0', n_envs=1, monitor_dir=log_dir)
 env = make_atari('MsPacmanNoFrameskip-v4')
 actions = make_atari('MsPacmanNoFrameskip-v4').unwrapped.get_action_meanings()
 env = Monitor(env, log_dir)
 env = DummyVecEnv([lambda: env])
 
-# env = DummyVecEnv([lambda:og_env])
-# env = make_atari('SpaceInvadersNoFrameskip-v4')
-
-# get rid of distracting TF errors
-tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
-
+# parse flags
 parser = argparse.ArgumentParser()
 parser.add_argument('--lives', help='env has lives', action='store_true', default=False)
 args = parser.parse_args()
 isLives = args.lives
-# set num timesteps
-num_steps = 1000
 
+# set num timesteps
+# num_steps = int(10000 * 0.9984)
+# num_steps = int(num_steps/0.9984)
+num_steps = 99840
+print("num steps ", num_steps)
 # define callback object
 step_callback = CustomCallbackA(0, actions, env,  num_steps, dir, isLives, make_atari('MsPacmanNoFrameskip-v4'))
 
@@ -63,7 +61,7 @@ step_callback = CustomCallbackA(0, actions, env,  num_steps, dir, isLives, make_
 # use pretrained model:
 # model = DQN.load("deepq_pacman_300K")
 # model = DQN.load("deepq_pacman_random")
-#model.set_env(env)
+# model.set_env(env)
 
 
 # learning_rate set to 0 means it will act as a predict function
@@ -72,10 +70,8 @@ step_callback = CustomCallbackA(0, actions, env,  num_steps, dir, isLives, make_
 # save model:
 # model.save("deepq_pacman_300K")
 
-# a2c
-model = A2C('CnnPolicy', env, verbose=1)
+# ppo2
+model = PPO2('CnnPolicy', env, verbose=1)
 model.learn(total_timesteps=num_steps, callback=step_callback)
-# model.save("a2c_pacman_100K_test")
-
-
-
+model.save("ppo2_pacman_100k")
+print("done!")

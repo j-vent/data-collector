@@ -10,9 +10,10 @@ from collections import OrderedDict
 from ghost_tracker import GhostTracker
 import colour_detection as cd
 from stable_baselines.common.atari_wrappers import make_atari
+import cv2 as cv
 
 
-class CustomCallback(BaseCallback):
+class CustomCallbackA(BaseCallback):
     """
     A custom callback that derives from ``BaseCallback``.
 
@@ -30,7 +31,7 @@ class CustomCallback(BaseCallback):
     isLives = False
     og_env = make_atari('MsPacmanNoFrameskip-v4')
     def __init__(self, verbose=0, env_actions=[], env=None, num_steps=10, dir='results/', isLives=False, og_env = ""):
-        super(CustomCallback, self).__init__(verbose)
+        super(CustomCallbackA, self).__init__(verbose)
         self.actions = env_actions
         self.env = env.unwrapped
         self.num_steps = num_steps
@@ -65,7 +66,7 @@ class CustomCallback(BaseCallback):
     def make_dataframes(self, df):
         # Make the main Dataframe
         main_df = pd.DataFrame.from_dict(
-            CustomCallback.main_data_dict, orient='index')
+            CustomCallbackA.main_data_dict, orient='index')
 
         # call to save last items as seperate df
         # self.save_last_line(args.stream_folder, main_df)
@@ -116,27 +117,29 @@ class CustomCallback(BaseCallback):
         total_reward = 0
         game_reward = 0
         print("in util func")
-        for key, value in CustomCallback.main_data_dict.items():
-
-            if(key < 2):
-                CustomCallback.main_data_dict[key]['step_reward'] = value['cumulative_episode_reward']
-            else:
-                if( CustomCallback.main_data_dict[key-1]['lives'] == 0):
-                    CustomCallback.main_data_dict[key]['step_reward'] = 0
-                else:
-                    CustomCallback.main_data_dict[key]['step_reward'] = value['cumulative_episode_reward'] - \
-                        CustomCallback.main_data_dict[key-1]['cumulative_episode_reward']
+        for key, value in CustomCallbackA.main_data_dict.items():
+            # ignore step reward because it doesn't do cumulative_reward
+            # if(key < 2):
+            #     CustomCallbackA.main_data_dict[key]['step_reward'] = value['cumulative_episode_reward']
+            # else:
+            #     if( CustomCallbackA.main_data_dict[key-1]['lives'] == 0):
+            #         CustomCallbackA.main_data_dict[key]['step_reward'] = 0
+            #     else:
+            #         CustomCallbackA.main_data_dict[key]['step_reward'] = value['cumulative_episode_reward'] - \
+            #             CustomCallbackA.main_data_dict[key-1]['cumulative_episode_reward']
                 
-            episode_reward += CustomCallback.main_data_dict[key]['step_reward'] 
-
+            # episode_reward += CustomCallbackA.main_data_dict[key]['step_reward'] 
+            episode_reward = value['cumulative_episode_reward']
+            
             if(self.isLives):
                 # game over (epoch)
                 if(value['lives'] == 0):
+                    # print("game over", key)
                     # not sure if this is correct
                     # total_reward += game_reward
-                    CustomCallback.main_data_dict[key]['game_reward'] = game_reward
-                    # CustomCallback.main_data_dict[key]['total_life'] = total_life
-                    # CustomCallback.main_data_dict[key]['episode_reward'] = episode_reward
+                    # CustomCallbackA.main_data_dict[key]['game_reward'] = game_reward
+                    # CustomCallbackA.main_data_dict[key]['total_life'] = total_life
+                    # CustomCallbackA.main_data_dict[key]['episode_reward'] = episode_reward
                     # reset values
                     total_game += 1
                     # total_life += 1
@@ -147,25 +150,26 @@ class CustomCallback(BaseCallback):
                 # lost a life (episode)
                 # elif(value['lives'] != prev_life and prev_life != 0):
                 # record BEFORE lives is decremented
-                elif(key != self.num_steps and value['lives'] != CustomCallback.main_data_dict[key+1]['lives']):
+                elif(key != self.num_steps and value['lives'] != CustomCallbackA.main_data_dict[key+1]['lives']):
+                    # print("elif ", key)
                     # not sure if this is correct
-                    CustomCallback.main_data_dict[key]['total_life'] = total_life
-                    CustomCallback.main_data_dict[key]['episode_reward'] = episode_reward
-                    game_reward += episode_reward
-                    total_reward += episode_reward
+                    CustomCallbackA.main_data_dict[key]['total_life'] = total_life
+                    # CustomCallbackA.main_data_dict[key]['episode_reward'] = episode_reward
+                    # game_reward += episode_reward
+                    # total_reward += episode_reward
                     total_life += 1
                     # steps_game += steps_life
                     steps_life = 1
                     episode_reward = 0
 
+                total_reward += episode_reward
                 # normal step
                 prev_life = value['lives']
-                CustomCallback.main_data_dict[key]['steps_life'] = steps_life
+                CustomCallbackA.main_data_dict[key]['steps_life'] = steps_life
                 
-                CustomCallback.main_data_dict[key]['steps_game'] = steps_game
-                CustomCallback.main_data_dict[key]['total_game'] = total_game
-
-                CustomCallback.main_data_dict[key]['total_reward'] = total_reward
+                CustomCallbackA.main_data_dict[key]['steps_game'] = steps_game
+                CustomCallbackA.main_data_dict[key]['total_game'] = total_game
+                CustomCallbackA.main_data_dict[key]['total_reward'] = total_reward
 
                 steps_life += 1
                 steps_game += 1
@@ -177,29 +181,29 @@ class CustomCallback(BaseCallback):
 
             # pacman_coord, pink_ghost_coord, red_ghost_coord, green_ghost_coord, orange_ghost_coord, to_pink_ghost, to_red_ghost, to_green_ghost, to_orange_ghost, pill_eaten, pill_dist = cd.find_all_coords(
             #     filepath)
-            # CustomCallback.main_data_dict[key]['pacman_coord_x'] = pacman_coord[0]
-            # CustomCallback.main_data_dict[key]['pacman_coord_y'] = pacman_coord[1]
-            # CustomCallback.main_data_dict[key]['pink_ghost_coord_x'] = pink_ghost_coord[0]
-            # CustomCallback.main_data_dict[key]['pink_ghost_coord_y'] = pink_ghost_coord[1]
-            # CustomCallback.main_data_dict[key]['to_pink_ghost'] = to_pink_ghost
-            # CustomCallback.main_data_dict[key]['red_ghost_coord_x'] = red_ghost_coord[0]
-            # CustomCallback.main_data_dict[key]['red_ghost_coord_y'] = red_ghost_coord[1]
-            # CustomCallback.main_data_dict[key]['to_red_ghost'] = to_red_ghost
-            # CustomCallback.main_data_dict[key]['green_ghost_coord_x'] = green_ghost_coord[0]
-            # CustomCallback.main_data_dict[key]['green_ghost_coord_y'] = green_ghost_coord[1]
-            # CustomCallback.main_data_dict[key]['to_green_ghost'] = to_green_ghost
-            # CustomCallback.main_data_dict[key]['orange_ghost_coord_x'] = orange_ghost_coord[0]
-            # CustomCallback.main_data_dict[key]['orange_ghost_coord_y'] = orange_ghost_coord[1]
-            # CustomCallback.main_data_dict[key]['to_orange_ghost'] = to_orange_ghost
+            # CustomCallbackA.main_data_dict[key]['pacman_coord_x'] = pacman_coord[0]
+            # CustomCallbackA.main_data_dict[key]['pacman_coord_y'] = pacman_coord[1]
+            # CustomCallbackA.main_data_dict[key]['pink_ghost_coord_x'] = pink_ghost_coord[0]
+            # CustomCallbackA.main_data_dict[key]['pink_ghost_coord_y'] = pink_ghost_coord[1]
+            # CustomCallbackA.main_data_dict[key]['to_pink_ghost'] = to_pink_ghost
+            # CustomCallbackA.main_data_dict[key]['red_ghost_coord_x'] = red_ghost_coord[0]
+            # CustomCallbackA.main_data_dict[key]['red_ghost_coord_y'] = red_ghost_coord[1]
+            # CustomCallbackA.main_data_dict[key]['to_red_ghost'] = to_red_ghost
+            # CustomCallbackA.main_data_dict[key]['green_ghost_coord_x'] = green_ghost_coord[0]
+            # CustomCallbackA.main_data_dict[key]['green_ghost_coord_y'] = green_ghost_coord[1]
+            # CustomCallbackA.main_data_dict[key]['to_green_ghost'] = to_green_ghost
+            # CustomCallbackA.main_data_dict[key]['orange_ghost_coord_x'] = orange_ghost_coord[0]
+            # CustomCallbackA.main_data_dict[key]['orange_ghost_coord_y'] = orange_ghost_coord[1]
+            # CustomCallbackA.main_data_dict[key]['to_orange_ghost'] = to_orange_ghost
 
-            # CustomCallback.main_data_dict[key]['pill_one_eaten'] = pill_eaten[0]
-            # CustomCallback.main_data_dict[key]['to_pill_one'] = pill_dist[0]
-            # CustomCallback.main_data_dict[key]['pill_two_eaten'] = pill_eaten[1]
-            # CustomCallback.main_data_dict[key]['to_pill_two'] = pill_dist[1]
-            # CustomCallback.main_data_dict[key]['pill_three_eaten'] = pill_eaten[2]
-            # CustomCallback.main_data_dict[key]['to_pill_three'] = pill_dist[2]
-            # CustomCallback.main_data_dict[key]['pill_four_eaten'] = pill_eaten[3]
-            # CustomCallback.main_data_dict[key]['to_pill_four'] = pill_dist[3]
+            # CustomCallbackA.main_data_dict[key]['pill_one_eaten'] = pill_eaten[0]
+            # CustomCallbackA.main_data_dict[key]['to_pill_one'] = pill_dist[0]
+            # CustomCallbackA.main_data_dict[key]['pill_two_eaten'] = pill_eaten[1]
+            # CustomCallbackA.main_data_dict[key]['to_pill_two'] = pill_dist[1]
+            # CustomCallbackA.main_data_dict[key]['pill_three_eaten'] = pill_eaten[2]
+            # CustomCallbackA.main_data_dict[key]['to_pill_three'] = pill_dist[2]
+            # CustomCallbackA.main_data_dict[key]['pill_four_eaten'] = pill_eaten[3]
+            # CustomCallbackA.main_data_dict[key]['to_pill_four'] = pill_dist[3]
 
         # TODO: display total reward somewhere?? 
 
@@ -212,13 +216,24 @@ class CustomCallback(BaseCallback):
 
         :return: (bool) If the callback returns False, training is aborted early.
         """
-
-        # save screenshot to folder
-        subfolder = os.path.join(self.directory, 'screen')
-        filepath = os.path.join(
-            subfolder, 'screenshot' + str(CustomCallback.step) + '.png')
-        self.og_env.ale.saveScreenPNG(filepath)
         
+        # save screenshot to folder
+        # subfolder = os.path.join(self.directory, 'screen')
+        # filepath = os.path.join(
+        #     subfolder, 'screenshot' + str(CustomCallbackA.step) + '.png')
+        # self.og_env.ale.saveScreenPNG(filepath)
+        # obs = []
+        print("in call back func!!!!")
+
+        if(CustomCallbackA.step == 1):
+            val = self.locals['obs'][0]
+            print("locs ", val)
+            print("type of array ", type(val))
+        # obs = cv.imread(filepath)   # reads an image in the BGR format
+        # img = cv.cvtColor(img, cv.COLOR_BGR2RGB)   # BGR -> RGB
+        # print("img ", obs)
+            # save image to disk
+            # cv.imwrite('pacman_ppo2.jpg', img)
         # episode_rewards, episode_lengths = evaluate_policy(self.model, self.env,
         #                                                        n_eval_episodes=self.n_eval_episodes,
         #                                                        render=self.render,
@@ -229,29 +244,32 @@ class CustomCallback(BaseCallback):
         # episode_rewards is a list that gets appended per epoch
         # take the episode reward of the latest epoch
 
-        # print("step: ", CustomCallback.step,  " rew: ", self.locals['episode_rewards'][-1])
-        if(CustomCallback.step  == 1) :
-        #print("at step ", str(CustomCallback.step))
-        #print("locals ", self.locals)
-        #print("actions", self.locals['mb_actions'])
-            print("locals", self.locals)
-        step_stats = {CustomCallback.step: {
-            'action': self.locals['mb_actions'][-1],
-            'action_name': self.actions[self.locals['actions'][0]],
-            'cumulative_episode_reward': self.locals['rewards'],
-            'state': CustomCallback.step,
-            #'lives':self.locals['infos']['ale.lives']
-            }
-        }
+        # print("step: ", CustomCallbackA.step,  " rew: ", self.locals['episode_rewards'][-1])
+        # if CustomCallbackA.step  % 1000 == 0:
+        #     print("at step ", CustomCallbackA.step)
+        # #print("at step ", str(CustomCallbackA.step))
+        # #print("locals ", self.locals)
+        # #print("actions", self.locals['mb_actions'])
+        #     #print("locals", self.locals)
+        # step_stats = {CustomCallbackA.step: {
+        #     'action': self.locals['actions'][0],
+        #     'action_name': self.actions[self.locals['actions'][0]],
+        #     'cumulative_episode_reward': self.locals['rewards'][0],
+        #     'state': CustomCallbackA.step,
+        #     #'lives':self.locals['infos']['ale.lives']
+        #     }
+        # }
 
-        #add step to dict
-        CustomCallback.main_data_dict.update(step_stats)
-        if(self.isLives == True and CustomCallback.step >= 2):
-            CustomCallback.main_data_dict[CustomCallback.step]['lives'] = self.locals['info']['ale.lives']
+        # # add step to dict
+        # CustomCallbackA.main_data_dict.update(step_stats)
+        # if(self.isLives == True and CustomCallbackA.step == 1):
+        #      CustomCallbackA.main_data_dict[CustomCallbackA.step]['lives'] = 3
+        # if(self.isLives == True and CustomCallbackA.step >= 2):
+        #     CustomCallbackA.main_data_dict[CustomCallbackA.step]['lives'] = self.locals['info']['ale.lives']
         
         
-        # find coordinates of pacman and ghosts
-        # key = CustomCallback.step
+        # # find coordinates of pacman and ghosts
+        # key = CustomCallbackA.step
         # subfolder = os.path.join(self.directory, 'screen')
         # dir = self.directory.replace("/", "")
         # filepath = dir + "\screen\screenshot" + str(key) + ".png"
@@ -259,60 +277,61 @@ class CustomCallback(BaseCallback):
         
         # pacman_coord, pink_ghost_coord, red_ghost_coord, green_ghost_coord, orange_ghost_coord, to_pink_ghost, to_red_ghost, to_green_ghost, to_orange_ghost, pill_eaten, pill_dist, hasBlueGhost = cd.find_all_coords(
         #     filepath)
-        # CustomCallback.main_data_dict[key]['pacman_coord_x'] = pacman_coord[0]
-        # CustomCallback.main_data_dict[key]['pacman_coord_y'] = pacman_coord[1]
-        # CustomCallback.main_data_dict[key]['pink_ghost_coord_x'] = pink_ghost_coord[0]
-        # CustomCallback.main_data_dict[key]['pink_ghost_coord_y'] = pink_ghost_coord[1]
-        # CustomCallback.main_data_dict[key]['to_pink_ghost'] = to_pink_ghost
-        # CustomCallback.main_data_dict[key]['red_ghost_coord_x'] = red_ghost_coord[0]
-        # CustomCallback.main_data_dict[key]['red_ghost_coord_y'] = red_ghost_coord[1]
-        # CustomCallback.main_data_dict[key]['to_red_ghost'] = to_red_ghost
-        # CustomCallback.main_data_dict[key]['green_ghost_coord_x'] = green_ghost_coord[0]
-        # CustomCallback.main_data_dict[key]['green_ghost_coord_y'] = green_ghost_coord[1]
-        # CustomCallback.main_data_dict[key]['to_green_ghost'] = to_green_ghost
-        # CustomCallback.main_data_dict[key]['orange_ghost_coord_x'] = orange_ghost_coord[0]
-        # CustomCallback.main_data_dict[key]['orange_ghost_coord_y'] = orange_ghost_coord[1]
-        # CustomCallback.main_data_dict[key]['to_orange_ghost'] = to_orange_ghost
+        # CustomCallbackA.main_data_dict[key]['pacman_coord_x'] = pacman_coord[0]
+        # CustomCallbackA.main_data_dict[key]['pacman_coord_y'] = pacman_coord[1]
+        # CustomCallbackA.main_data_dict[key]['pink_ghost_coord_x'] = pink_ghost_coord[0]
+        # CustomCallbackA.main_data_dict[key]['pink_ghost_coord_y'] = pink_ghost_coord[1]
+        # CustomCallbackA.main_data_dict[key]['to_pink_ghost'] = to_pink_ghost
+        # CustomCallbackA.main_data_dict[key]['red_ghost_coord_x'] = red_ghost_coord[0]
+        # CustomCallbackA.main_data_dict[key]['red_ghost_coord_y'] = red_ghost_coord[1]
+        # CustomCallbackA.main_data_dict[key]['to_red_ghost'] = to_red_ghost
+        # CustomCallbackA.main_data_dict[key]['green_ghost_coord_x'] = green_ghost_coord[0]
+        # CustomCallbackA.main_data_dict[key]['green_ghost_coord_y'] = green_ghost_coord[1]
+        # CustomCallbackA.main_data_dict[key]['to_green_ghost'] = to_green_ghost
+        # CustomCallbackA.main_data_dict[key]['orange_ghost_coord_x'] = orange_ghost_coord[0]
+        # CustomCallbackA.main_data_dict[key]['orange_ghost_coord_y'] = orange_ghost_coord[1]
+        # CustomCallbackA.main_data_dict[key]['to_orange_ghost'] = to_orange_ghost
 
-        # CustomCallback.main_data_dict[key]['pill_one_eaten'] = pill_eaten[0]
-        # CustomCallback.main_data_dict[key]['to_pill_one'] = pill_dist[0]
-        # CustomCallback.main_data_dict[key]['pill_two_eaten'] = pill_eaten[1]
-        # CustomCallback.main_data_dict[key]['to_pill_two'] = pill_dist[1]
-        # CustomCallback.main_data_dict[key]['pill_three_eaten'] = pill_eaten[2]
-        # CustomCallback.main_data_dict[key]['to_pill_three'] = pill_dist[2]
-        # CustomCallback.main_data_dict[key]['pill_four_eaten'] = pill_eaten[3]
-        # CustomCallback.main_data_dict[key]['to_pill_four'] = pill_dist[3]
+        # CustomCallbackA.main_data_dict[key]['pill_one_eaten'] = pill_eaten[0]
+        # CustomCallbackA.main_data_dict[key]['to_pill_one'] = pill_dist[0]
+        # CustomCallbackA.main_data_dict[key]['pill_two_eaten'] = pill_eaten[1]
+        # CustomCallbackA.main_data_dict[key]['to_pill_two'] = pill_dist[1]
+        # CustomCallbackA.main_data_dict[key]['pill_three_eaten'] = pill_eaten[2]
+        # CustomCallbackA.main_data_dict[key]['to_pill_three'] = pill_dist[2]
+        # CustomCallbackA.main_data_dict[key]['pill_four_eaten'] = pill_eaten[3]
+        # CustomCallbackA.main_data_dict[key]['to_pill_four'] = pill_dist[3]
 
         # # find blue ghosts, if any
         # if(hasBlueGhost):
         #     imagePeeler = GhostTracker()
-        #     # print("About to seek pacman at ", CustomCallback.step)
+        #     # print("About to seek pacman at ", CustomCallbackA.step)
+        #     # ghost_coords = imagePeeler.wheresPacman(obs)
         #     ghost_coords = imagePeeler.wheresPacman(self.locals['obs'])
         #     if(ghost_coords[0] != -1):
-        #         CustomCallback.main_data_dict[key]['dark_blue_ghost1_coord_x'] = ghost_coords[0]
-        #         CustomCallback.main_data_dict[key]['dark_blue_ghost1_coord_y'] = ghost_coords[1]
+        #         CustomCallbackA.main_data_dict[key]['dark_blue_ghost1_coord_x'] = ghost_coords[0]
+        #         CustomCallbackA.main_data_dict[key]['dark_blue_ghost1_coord_y'] = ghost_coords[1]
         #     if(ghost_coords[2] != -1):
-        #         CustomCallback.main_data_dict[key]['dark_blue_ghost2_coord_x'] = ghost_coords[2]
-        #         CustomCallback.main_data_dict[key]['dark_blue_ghost2_coord_y'] = ghost_coords[3]
+        #         CustomCallbackA.main_data_dict[key]['dark_blue_ghost2_coord_x'] = ghost_coords[2]
+        #         CustomCallbackA.main_data_dict[key]['dark_blue_ghost2_coord_y'] = ghost_coords[3]
         #     if(ghost_coords[4] != -1):
-        #         CustomCallback.main_data_dict[key]['dark_blue_ghost3_coord_x'] = ghost_coords[4]
-        #         CustomCallback.main_data_dict[key]['dark_blue_ghost3_coord_y'] = ghost_coords[5]
+        #         CustomCallbackA.main_data_dict[key]['dark_blue_ghost3_coord_x'] = ghost_coords[4]
+        #         CustomCallbackA.main_data_dict[key]['dark_blue_ghost3_coord_y'] = ghost_coords[5]
         #     if(ghost_coords[6] != -1):
-        #         CustomCallback.main_data_dict[key]['dark_blue_ghost4_coord_x'] = ghost_coords[6]
-        #         CustomCallback.main_data_dict[key]['dark_blue_ghost4_coord_y'] = ghost_coords[7]
+        #         CustomCallbackA.main_data_dict[key]['dark_blue_ghost4_coord_x'] = ghost_coords[6]
+        #         CustomCallbackA.main_data_dict[key]['dark_blue_ghost4_coord_y'] = ghost_coords[7]
 
-            # print("!!!coords ", ghost_coords)
+        #     print("ghost coords ", ghost_coords)
 
-        # remove screenshot
-        # if os.path.exists(filepath):
-        #     os.remove(filepath)
-        # else:
-        #     print("screenshot does not exist")
+        # # remove screenshot
+        # # if os.path.exists(filepath):
+        # #     os.remove(filepath)
+        # # else:
+        # #     print("screenshot does not exist")
 
         
-        # convert dict to different types
-        # if(CustomCallback.step == self.num_steps):
-        #     # print("dictionary ", CustomCallback.main_data_dict)
+        # # convert dict to different types
+        # if(CustomCallbackA.step == self.num_steps):
+        #     # print("dictionary ", CustomCallbackA.main_data_dict)
         #     self.make_dataframes(self.df_list)
         #     self.df_to_csv("df_og.csv", self.df_list)
         #     self.df_to_parquet()
@@ -326,4 +345,5 @@ class CustomCallback(BaseCallback):
         #     self.df_to_csv("df_mod.csv", self.df_list_mod)
         #     # self.df_to_parquet()
         #     print("done!")
-        # CustomCallback.step = CustomCallback.step + 1
+        CustomCallbackA.step = CustomCallbackA.step + 1
+        return True

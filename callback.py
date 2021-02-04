@@ -137,7 +137,7 @@ class CustomCallback(BaseCallback):
                     # reset values
                     total_game += 1
                     # total_life += 1
-                    steps_game = steps_life = 1
+                    steps_game = steps_life = 0
                     game_reward = 0
                     episode_reward = 0
 
@@ -162,9 +162,11 @@ class CustomCallback(BaseCallback):
                 CustomCallback.main_data_dict[key]['steps_game'] = steps_game
                 CustomCallback.main_data_dict[key]['total_game'] = total_game
 
+                CustomCallback.main_data_dict[key]['total_reward'] = total_reward
+
                 steps_life += 1
                 steps_game += 1
-        CustomCallback.main_data_dict[self.num_steps]['total_reward'] = total_reward
+        
             # find coordinates of pacman and ghosts
             # subfolder = os.path.join(self.directory, 'screen')
             # dir = self.directory.replace("/", "")
@@ -317,5 +319,5 @@ class CustomCallback(BaseCallback):
             self.make_dataframes(self.df_list_mod)
             self.df_to_csv("df_mod.csv", self.df_list_mod)
             # self.df_to_parquet()
-            print("done!")
+            print("done! inside callback")
         CustomCallback.step = CustomCallback.step + 1
