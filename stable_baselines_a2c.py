@@ -35,10 +35,15 @@ os.makedirs(log_dir, exist_ok=True)
 # env = Monitor(og_env, log_dir)
 # env = DummyVecEnv([lambda: og_env])
 
-env = make_atari('MsPacmanNoFrameskip-v4')
+# nv = make_atari_env('MsPacmanNoFrameskip-v4', n_envs=4, seed=0)
 actions = make_atari('MsPacmanNoFrameskip-v4').unwrapped.get_action_meanings()
-env = Monitor(env, log_dir)
-env = DummyVecEnv([lambda: env])
+env = make_atari_env('MsPacmanNoFrameskip-v4', num_env=4, seed=0)
+# Stack 4 frames
+env = VecFrameStack(env, n_stack=4)
+# Stack 4 frames
+#env = VecFrameStack(env, n_stack=4)
+#env = Monitor(env, log_dir)
+#env = DummyVecEnv([lambda: env])
 
 # env = DummyVecEnv([lambda:og_env])
 # env = make_atari('SpaceInvadersNoFrameskip-v4')
@@ -51,7 +56,7 @@ parser.add_argument('--lives', help='env has lives', action='store_true', defaul
 args = parser.parse_args()
 isLives = args.lives
 # set num timesteps
-num_steps = 1000
+num_steps = 20
 
 # define callback object
 step_callback = CustomCallbackA(0, actions, env,  num_steps, dir, isLives, make_atari('MsPacmanNoFrameskip-v4'))
@@ -73,7 +78,7 @@ step_callback = CustomCallbackA(0, actions, env,  num_steps, dir, isLives, make_
 # model.save("deepq_pacman_300K")
 
 # a2c
-model = A2C('CnnPolicy', env, verbose=1)
+model = A2C('CnnPolicy', env, verbose=1, n_steps=1)
 model.learn(total_timesteps=num_steps, callback=step_callback)
 # model.save("a2c_pacman_100K_test")
 

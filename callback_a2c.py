@@ -1,6 +1,7 @@
 from stable_baselines.common.callbacks import BaseCallback
 from stable_baselines.common.evaluation import evaluate_policy
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import os
 import pandas as pd
 import pyarrow as pa
@@ -11,7 +12,7 @@ from ghost_tracker import GhostTracker
 import colour_detection as cd
 from stable_baselines.common.atari_wrappers import make_atari
 import cv2 as cv
-
+from PIL import Image as im 
 
 class CustomCallbackA(BaseCallback):
     """
@@ -33,16 +34,17 @@ class CustomCallbackA(BaseCallback):
     def __init__(self, verbose=0, env_actions=[], env=None, num_steps=10, dir='results/', isLives=False, og_env = ""):
         super(CustomCallbackA, self).__init__(verbose)
         self.actions = env_actions
-        self.env = env.unwrapped
+        self.env = env
         self.num_steps = num_steps
         self.directory = dir
         self.isLives = isLives
         self.og_env = og_env.unwrapped
+        print("num stepss", self.num_timesteps)
         print("game has lives? ", self.isLives)
         # env <MaxAndSkipEnv<NoopResetEnv<TimeLimit<AtariEnv<MsPacmanNoFrameskip-v4>>>>>
         print("dir ", self.directory)
-        print("env", env.unwrapped)
-        print("og_env", og_env.unwrapped)
+        print("env", self.env)
+        print("og_env", self.og_env)
         print("mod ",  self.model)
         # Those variables will be accessible in the callback
         # (they are defined in the base class)
@@ -220,15 +222,47 @@ class CustomCallbackA(BaseCallback):
         # save screenshot to folder
         # subfolder = os.path.join(self.directory, 'screen')
         # filepath = os.path.join(
-        #     subfolder, 'screenshot' + str(CustomCallbackA.step) + '.png')
-        # self.og_env.ale.saveScreenPNG(filepath)
+        #     subfolder, 'screenshot' + str(self.num_timesteps) + '.png')
+        # self.env.ale.saveScreenPNG("obs_ale.png")
         # obs = []
-        print("in call back func!!!!")
+        # what timestep you think
+        print("timestep ",CustomCallbackA.step )
+        # what timestep a2c learn is on 
+        print("num timestep",self.num_timesteps )
+        # if(CustomCallbackA.step == 1):
+        #     img = self.locals['obs'][0]
+        #     print("locs ", img)
+        #     print("shape" , img.shape) 
+        #     # print("type of array ", type(img))
+        #     # img[:,:,0] = np.ones([5,5])*64/255.0
+        #     # img[:,:,1] = np.ones([5,5])*128/255.0
+        #     # img[:,:,2] = np.ones([5,5])*192/255.0
 
+        #     # cv.imwrite('pacman_ss.jpg', img)
+        #     # cv.imshow("image", img)
+        # img = self.locals['obs'][0]
+        # data = im.fromarray(img) 
+        subfolder = os.path.join(self.directory, 'screen')
+        # filepath = os.path.join(subfolder, 'screenshot' + str(self.num_timesteps) + '.png')
+        filepath = os.path.join(subfolder, 'screenshot' + str(self.num_timesteps))
+        # mpl.image.imsave(filepath, img)
         if(CustomCallbackA.step == 1):
-            val = self.locals['obs'][0]
-            print("locs ", val)
-            print("type of array ", type(val))
+            print("locals ", self.locals)
+            obs = self.locals['obs']
+            print("obs ", obs)
+            print("obs0 ", obs[0])
+            print("type ", type(obs))
+            print("shape ", obs.shape)
+            mpl.image.imsave("obs.png", obs)
+            val = self.env.get_images()
+            print("val ", val)
+        # obs = self.locals['obs']
+        # mpl.image.imsave(filepath+"_0.png", obs[0])
+        # mpl.image.imsave(filepath+"_1.png", obs[1])
+        # mpl.image.imsave(filepath+"_2.png", obs[2])
+        # mpl.image.imsave(filepath+"_3.png", obs[3])
+           
+        # data.save(filepath) 
         # obs = cv.imread(filepath)   # reads an image in the BGR format
         # img = cv.cvtColor(img, cv.COLOR_BGR2RGB)   # BGR -> RGB
         # print("img ", obs)
@@ -247,25 +281,40 @@ class CustomCallbackA(BaseCallback):
         # print("step: ", CustomCallbackA.step,  " rew: ", self.locals['episode_rewards'][-1])
         # if CustomCallbackA.step  % 1000 == 0:
         #     print("at step ", CustomCallbackA.step)
-        # #print("at step ", str(CustomCallbackA.step))
-        # #print("locals ", self.locals)
-        # #print("actions", self.locals['mb_actions'])
-        #     #print("locals", self.locals)
+        #print("at step ", str(CustomCallbackA.step))
+        #print("locals ", self.locals)
+        #print("actions", self.locals['mb_actions'])
+            #print("locals", self.locals)
         # step_stats = {CustomCallbackA.step: {
-        #     'action': self.locals['actions'][0],
-        #     'action_name': self.actions[self.locals['actions'][0]],
-        #     'cumulative_episode_reward': self.locals['rewards'][0],
+        #     'action_env_0': self.locals['actions'][0],
+        #     'action_env_1': self.locals['actions'][1],
+        #     'action_env_2': self.locals['actions'][2],
+        #     'action_env_3': self.locals['actions'][3],
+        #     'action_name_env_0': self.actions[self.locals['actions'][0]],
+        #     'action_name_env_1': self.actions[self.locals['actions'][1]],
+        #     'action_name_env_2': self.actions[self.locals['actions'][2]],
+        #     'action_name_env_3': self.actions[self.locals['actions'][3]],
+        #     'cumulative_episode_reward_env_0': self.locals['rewards'][0],
+        #     'cumulative_episode_reward_env_1': self.locals['rewards'][1],
+        #     'cumulative_episode_reward_env_2': self.locals['rewards'][2],
+        #     'cumulative_episode_reward_env_3': self.locals['rewards'][3],
         #     'state': CustomCallbackA.step,
         #     #'lives':self.locals['infos']['ale.lives']
         #     }
         # }
 
-        # # add step to dict
+        # add step to dict
         # CustomCallbackA.main_data_dict.update(step_stats)
         # if(self.isLives == True and CustomCallbackA.step == 1):
-        #      CustomCallbackA.main_data_dict[CustomCallbackA.step]['lives'] = 3
-        # if(self.isLives == True and CustomCallbackA.step >= 2):
-        #     CustomCallbackA.main_data_dict[CustomCallbackA.step]['lives'] = self.locals['info']['ale.lives']
+        #     CustomCallbackA.main_data_dict[CustomCallbackA.step]['lives_env_0'] = 3
+        #     CustomCallbackA.main_data_dict[CustomCallbackA.step]['lives_env_1'] = 3
+        #     CustomCallbackA.main_data_dict[CustomCallbackA.step]['lives_env_2'] = 3
+        #     CustomCallbackA.main_data_dict[CustomCallbackA.step]['lives_env_3'] = 3
+        # if(CustomCallbackA.step > 2):
+        #     CustomCallbackA.main_data_dict[CustomCallbackA.step]['lives_env_0'] = self.locals['infos'][0]['ale.lives']
+        #     CustomCallbackA.main_data_dict[CustomCallbackA.step]['lives_env_1'] = self.locals['infos'][1]['ale.lives']
+        #     CustomCallbackA.main_data_dict[CustomCallbackA.step]['lives_env_2'] = self.locals['infos'][2]['ale.lives']
+        #     CustomCallbackA.main_data_dict[CustomCallbackA.step]['lives_env_3'] = self.locals['infos'][3]['ale.lives']
         
         
         # # find coordinates of pacman and ghosts
@@ -329,8 +378,9 @@ class CustomCallbackA(BaseCallback):
         # #     print("screenshot does not exist")
 
         
-        # # convert dict to different types
-        # if(CustomCallbackA.step == self.num_steps):
+        # convert dict to different types
+        # TODO: change to n envs
+        # if(CustomCallbackA.step == self.num_steps/4):
         #     # print("dictionary ", CustomCallbackA.main_data_dict)
         #     self.make_dataframes(self.df_list)
         #     self.df_to_csv("df_og.csv", self.df_list)
@@ -340,9 +390,9 @@ class CustomCallbackA(BaseCallback):
         #     # print(pd.read_parquet(os.path.join(self.directory,  "df.parquet")))
 
         #     # calculate new info
-        #     self.util()
-        #     self.make_dataframes(self.df_list_mod)
-        #     self.df_to_csv("df_mod.csv", self.df_list_mod)
+        #     #self.util()
+        #     #self.make_dataframes(self.df_list_mod)
+        #     #self.df_to_csv("df_mod.csv", self.df_list_mod)
         #     # self.df_to_parquet()
         #     print("done!")
         CustomCallbackA.step = CustomCallbackA.step + 1
