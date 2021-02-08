@@ -258,20 +258,20 @@ class CustomCallbackA(BaseCallback):
         print("num timestep",self.num_timesteps )
         # print("locs ", self.locals)
         # works at timestep 10, num_timestep 40
-        if(CustomCallbackA.step >= 10):
-            # img = self.locals['obs'][0]
-            # print("rolloutsss ", self.locals['rollout'])
-            obs, states, rewards, masks, actions, values, ep_infos, true_reward = self.locals['rollout']
-            print("true rewards", true_reward)
-            print("rewards ", rewards)
-            print("masks", masks)
-            print("ep info", ep_infos)
-            episode_reward = [0,0,0,0]
-            # # 4,5 are n_envs, n_steps respectively
-            new_rew = self.total_episode_reward_logger(episode_reward,true_reward.reshape((4, 5)),
-                                                masks.reshape((4, 5)),
-                                                None, self.num_timesteps)
-            print("rew!! ", new_rew)
+        # if(CustomCallbackA.step >= 10):
+        #     # img = self.locals['obs'][0]
+        #     # print("rolloutsss ", self.locals['rollout'])
+        #     obs, states, rewards, masks, actions, values, ep_infos, true_reward = self.locals['rollout']
+        #     print("true rewards", true_reward)
+        #     print("rewards ", rewards)
+        #     print("masks", masks)
+        #     print("ep info", ep_infos)
+        #     episode_reward = [0,0,0,0]
+        #     # # 4,5 are n_envs, n_steps respectively
+        #     new_rew = self.total_episode_reward_logger(episode_reward,true_reward.reshape((4, 5)),
+        #                                         masks.reshape((4, 5)),
+        #                                         None, self.num_timesteps)
+        #     print("rew!! ", new_rew)
             # print("rew!! ", true_reward)
         #     print("shape" , img.shape) 
         #     # print("type of array ", type(img))
@@ -283,6 +283,12 @@ class CustomCallbackA(BaseCallback):
         #     # cv.imshow("image", img)
         # img = self.locals['obs'][0]
         # data = im.fromarray(img) 
+       
+        # print("rew ", self.env.step_wait())
+        # print(self.locals)
+        #print("rew ", self.env.get_original_reward())
+        print("rew func ", self.env.get_episode_rewards())
+        # print("other rew", self.env.episode_rewards )
         subfolder = os.path.join(self.directory, 'screen')
         # filepath = os.path.join(subfolder, 'screenshot' + str(self.num_timesteps) + '.png')
         filepath = os.path.join(subfolder) 
@@ -299,7 +305,7 @@ class CustomCallbackA(BaseCallback):
         # mpl.image.imsave("obs3.png", val[3])
 
             # print("val ", val)
-        # obs = self.locals['obs']
+        obs = self.locals['obs']
         # print("rews ", self.num_timesteps , " ",self.locals['rewards'])
         # print("mbrews ", self.num_timesteps , " ",self.locals['mb_rewards'])
         obs = self.env.get_images()

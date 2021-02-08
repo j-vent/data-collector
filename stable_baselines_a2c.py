@@ -6,7 +6,7 @@ import tensorflow as tf
 import pandas as pd
 from stable_baselines.common.atari_wrappers import make_atari
 from stable_baselines.common.cmd_util import make_atari_env
-from stable_baselines.common.vec_env import VecFrameStack
+from stable_baselines.common.vec_env import VecFrameStack, VecEnvWrapper
 from stable_baselines.deepq.policies import MlpPolicy, CnnPolicy
 from stable_baselines import DQN, A2C, PPO2
 import pyarrow as pa
@@ -18,6 +18,7 @@ from stable_baselines.common.vec_env import DummyVecEnv
 from stable_baselines.common.cmd_util import make_vec_env
 import os, datetime
 import argparse
+from VecMonitor import VecMonitor
 
 # create folder and subfolders for data
 dir = 'ac2_data_' + datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + '/'
@@ -37,12 +38,17 @@ os.makedirs(log_dir, exist_ok=True)
 
 # nv = make_atari_env('MsPacmanNoFrameskip-v4', n_envs=4, seed=0)
 actions = make_atari('MsPacmanNoFrameskip-v4').unwrapped.get_action_meanings()
-env = make_atari_env('MsPacmanNoFrameskip-v4', num_env=4, seed=0)
+env = make_atari_env('MsPacmanNoFrameskip-v4', num_env=1, seed=0)
+print("env ", env)
+print("type ", type(env))
+env = VecMonitor(env, log_dir)
+# env = DummyVecEnv([lambda: env])
 # Stack 4 frames
 env = VecFrameStack(env, n_stack=4)
+# env = VecEnvWrapper(env)
 # Stack 4 frames
 #env = VecFrameStack(env, n_stack=4)
-#env = Monitor(env, log_dir)
+
 #env = DummyVecEnv([lambda: env])
 
 # env = DummyVecEnv([lambda:og_env])
@@ -56,7 +62,7 @@ parser.add_argument('--lives', help='env has lives', action='store_true', defaul
 args = parser.parse_args()
 isLives = args.lives
 # set num timesteps
-num_steps = 25000
+num_steps = 250
 
 # define callback object
 step_callback = CustomCallbackA(0, actions, env,  num_steps, dir, isLives, make_atari('MsPacmanNoFrameskip-v4'))
