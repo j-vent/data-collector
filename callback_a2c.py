@@ -208,7 +208,34 @@ class CustomCallbackA(BaseCallback):
             # CustomCallbackA.main_data_dict[key]['to_pill_four'] = pill_dist[3]
 
         # TODO: display total reward somewhere?? 
+    def total_episode_reward_logger(self, rew_acc, rewards, masks, writer, steps):
+        """
+        calculates the cumulated episode reward, and prints to tensorflow log the output
+        :param rew_acc: (np.array float) the total running reward
+        :param rewards: (np.array float) the rewards
+        :param masks: (np.array bool) the end of episodes
+        :param writer: (TensorFlow Session.writer) the writer to log to
+        :param steps: (int) the current timestep
+        :return: (np.array float) the updated total running reward
+        :return: (np.array float) the updated total running reward
+        """
 
+        for env_idx in range(rewards.shape[0]):
+            dones_idx = np.sort(np.argwhere(masks[env_idx]))
+
+            if len(dones_idx) == 0:
+                rew_acc[env_idx] += sum(rewards[env_idx])
+            else:
+                rew_acc[env_idx] += sum(rewards[env_idx, :dones_idx[0, 0]])
+                # summary = tf.Summary(value=[tf.Summary.Value(tag="episode_reward", simple_value=rew_acc[env_idx])])
+                # writer.add_summary(summary, steps + dones_idx[0, 0])
+                for k in range(1, len(dones_idx[:, 0])):
+                    rew_acc[env_idx] = sum(rewards[env_idx, dones_idx[k - 1, 0]:dones_idx[k, 0]])
+                    #summary = tf.Summary(value=[tf.Summary.Value(tag="episode_reward", simple_value=rew_acc[env_idx])])
+                    #writer.add_summary(summary, steps + dones_idx[k, 0])
+                rew_acc[env_idx] = sum(rewards[env_idx, dones_idx[-1, 0]:])
+
+        return rew_acc
     def _on_step(self) -> bool:
         """
         This method will be called by the model after each call to `env.step()`.
@@ -229,9 +256,23 @@ class CustomCallbackA(BaseCallback):
         print("timestep ",CustomCallbackA.step )
         # what timestep a2c learn is on 
         print("num timestep",self.num_timesteps )
-        # if(CustomCallbackA.step == 1):
-        #     img = self.locals['obs'][0]
-        #     print("locs ", img)
+        # print("locs ", self.locals)
+        # works at timestep 10, num_timestep 40
+        if(CustomCallbackA.step >= 10):
+            # img = self.locals['obs'][0]
+            # print("rolloutsss ", self.locals['rollout'])
+            obs, states, rewards, masks, actions, values, ep_infos, true_reward = self.locals['rollout']
+            print("true rewards", true_reward)
+            print("rewards ", rewards)
+            print("masks", masks)
+            print("ep info", ep_infos)
+            episode_reward = [0,0,0,0]
+            # # 4,5 are n_envs, n_steps respectively
+            new_rew = self.total_episode_reward_logger(episode_reward,true_reward.reshape((4, 5)),
+                                                masks.reshape((4, 5)),
+                                                None, self.num_timesteps)
+            print("rew!! ", new_rew)
+            # print("rew!! ", true_reward)
         #     print("shape" , img.shape) 
         #     # print("type of array ", type(img))
         #     # img[:,:,0] = np.ones([5,5])*64/255.0
@@ -244,37 +285,45 @@ class CustomCallbackA(BaseCallback):
         # data = im.fromarray(img) 
         subfolder = os.path.join(self.directory, 'screen')
         # filepath = os.path.join(subfolder, 'screenshot' + str(self.num_timesteps) + '.png')
-        filepath = os.path.join(subfolder, 'screenshot' + str(self.num_timesteps))
+        filepath = os.path.join(subfolder) 
         # mpl.image.imsave(filepath, img)
-        if(CustomCallbackA.step == 1):
-            print("locals ", self.locals)
-            obs = self.locals['obs']
-            print("obs ", obs)
-            print("obs0 ", obs[0])
-            print("type ", type(obs))
-            print("shape ", obs.shape)
-            mpl.image.imsave("obs.png", obs)
-            val = self.env.get_images()
-            print("val ", val)
+        
+        # print("locals ", self.locals)
+            # obs = self.locals['obs']
+            
+        
+        # val = self.env.get_images()
+        # mpl.image.imsave("obs0.png", val[0])
+        # mpl.image.imsave("obs1.png", val[1])
+        # mpl.image.imsave("obs2.png", val[2])
+        # mpl.image.imsave("obs3.png", val[3])
+
+            # print("val ", val)
         # obs = self.locals['obs']
-        # mpl.image.imsave(filepath+"_0.png", obs[0])
-        # mpl.image.imsave(filepath+"_1.png", obs[1])
-        # mpl.image.imsave(filepath+"_2.png", obs[2])
-        # mpl.image.imsave(filepath+"_3.png", obs[3])
+        # print("rews ", self.num_timesteps , " ",self.locals['rewards'])
+        # print("mbrews ", self.num_timesteps , " ",self.locals['mb_rewards'])
+        obs = self.env.get_images()
+        img_name = '_screenshot' + str(self.num_timesteps)
+        mpl.image.imsave(filepath+"env_0"+img_name+"_0.png", obs[0])
+        mpl.image.imsave(filepath+"env_1"+img_name+"_1.png", obs[1])
+        mpl.image.imsave(filepath+"env_2"+img_name+"_2.png", obs[2])
+        mpl.image.imsave(filepath+"env_3"+img_name+"_3.png", obs[3])
            
         # data.save(filepath) 
         # obs = cv.imread(filepath)   # reads an image in the BGR format
         # img = cv.cvtColor(img, cv.COLOR_BGR2RGB)   # BGR -> RGB
         # print("img ", obs)
             # save image to disk
-            # cv.imwrite('pacman_ppo2.jpg', img)
+            # cv.imwrite('pacman_ppo2.jpg', img)\
+
+        # documentation says only with one env :(
         # episode_rewards, episode_lengths = evaluate_policy(self.model, self.env,
-        #                                                        n_eval_episodes=self.n_eval_episodes,
+        #                                                        n_eval_episodes=250,
         #                                                        render=self.render,
         #                                                        deterministic=self.deterministic,
-        #
         #                                                        return_episode_rewards=True)
-
+        # if(self.num_timesteps > 8):
+        #     print("rollout", self.locals['rollout'])
         # episode_rewards is a list that gets appended per epoch
         # take the episode reward of the latest epoch
 
@@ -285,37 +334,36 @@ class CustomCallbackA(BaseCallback):
         #print("locals ", self.locals)
         #print("actions", self.locals['mb_actions'])
             #print("locals", self.locals)
-        # step_stats = {CustomCallbackA.step: {
-        #     'action_env_0': self.locals['actions'][0],
-        #     'action_env_1': self.locals['actions'][1],
-        #     'action_env_2': self.locals['actions'][2],
-        #     'action_env_3': self.locals['actions'][3],
-        #     'action_name_env_0': self.actions[self.locals['actions'][0]],
-        #     'action_name_env_1': self.actions[self.locals['actions'][1]],
-        #     'action_name_env_2': self.actions[self.locals['actions'][2]],
-        #     'action_name_env_3': self.actions[self.locals['actions'][3]],
-        #     'cumulative_episode_reward_env_0': self.locals['rewards'][0],
-        #     'cumulative_episode_reward_env_1': self.locals['rewards'][1],
-        #     'cumulative_episode_reward_env_2': self.locals['rewards'][2],
-        #     'cumulative_episode_reward_env_3': self.locals['rewards'][3],
-        #     'state': CustomCallbackA.step,
-        #     #'lives':self.locals['infos']['ale.lives']
-        #     }
-        # }
+        step_stats = {CustomCallbackA.step: {
+            'action_env_0': self.locals['actions'][0],
+            'action_env_1': self.locals['actions'][1],
+            'action_env_2': self.locals['actions'][2],
+            'action_env_3': self.locals['actions'][3],
+            'action_name_env_0': self.actions[self.locals['actions'][0]],
+            'action_name_env_1': self.actions[self.locals['actions'][1]],
+            'action_name_env_2': self.actions[self.locals['actions'][2]],
+            'action_name_env_3': self.actions[self.locals['actions'][3]],
+            'cumulative_episode_reward_env_0': self.locals['rewards'][0],
+            'cumulative_episode_reward_env_1': self.locals['rewards'][1],
+            'cumulative_episode_reward_env_2': self.locals['rewards'][2],
+            'cumulative_episode_reward_env_3': self.locals['rewards'][3],
+            'state': CustomCallbackA.step,
+            #'lives':self.locals['infos']['ale.lives']
+            }
+        }
 
         # add step to dict
-        # CustomCallbackA.main_data_dict.update(step_stats)
-        # if(self.isLives == True and CustomCallbackA.step == 1):
-        #     CustomCallbackA.main_data_dict[CustomCallbackA.step]['lives_env_0'] = 3
-        #     CustomCallbackA.main_data_dict[CustomCallbackA.step]['lives_env_1'] = 3
-        #     CustomCallbackA.main_data_dict[CustomCallbackA.step]['lives_env_2'] = 3
-        #     CustomCallbackA.main_data_dict[CustomCallbackA.step]['lives_env_3'] = 3
-        # if(CustomCallbackA.step > 2):
-        #     CustomCallbackA.main_data_dict[CustomCallbackA.step]['lives_env_0'] = self.locals['infos'][0]['ale.lives']
-        #     CustomCallbackA.main_data_dict[CustomCallbackA.step]['lives_env_1'] = self.locals['infos'][1]['ale.lives']
-        #     CustomCallbackA.main_data_dict[CustomCallbackA.step]['lives_env_2'] = self.locals['infos'][2]['ale.lives']
-        #     CustomCallbackA.main_data_dict[CustomCallbackA.step]['lives_env_3'] = self.locals['infos'][3]['ale.lives']
-        
+        CustomCallbackA.main_data_dict.update(step_stats)
+        if(self.isLives == True and CustomCallbackA.step == 1):
+            CustomCallbackA.main_data_dict[CustomCallbackA.step]['lives_env_0'] = 3
+            CustomCallbackA.main_data_dict[CustomCallbackA.step]['lives_env_1'] = 3
+            CustomCallbackA.main_data_dict[CustomCallbackA.step]['lives_env_2'] = 3
+            CustomCallbackA.main_data_dict[CustomCallbackA.step]['lives_env_3'] = 3
+        if(CustomCallbackA.step > 2):
+            CustomCallbackA.main_data_dict[CustomCallbackA.step]['lives_env_0'] = self.locals['infos'][0]['ale.lives']
+            CustomCallbackA.main_data_dict[CustomCallbackA.step]['lives_env_1'] = self.locals['infos'][1]['ale.lives']
+            CustomCallbackA.main_data_dict[CustomCallbackA.step]['lives_env_2'] = self.locals['infos'][2]['ale.lives']
+            CustomCallbackA.main_data_dict[CustomCallbackA.step]['lives_env_3'] = self.locals['infos'][3]['ale.lives']
         
         # # find coordinates of pacman and ghosts
         # key = CustomCallbackA.step
@@ -380,20 +428,20 @@ class CustomCallbackA(BaseCallback):
         
         # convert dict to different types
         # TODO: change to n envs
-        # if(CustomCallbackA.step == self.num_steps/4):
-        #     # print("dictionary ", CustomCallbackA.main_data_dict)
-        #     self.make_dataframes(self.df_list)
-        #     self.df_to_csv("df_og.csv", self.df_list)
-        #     self.df_to_parquet()
-        #     # test if parquet file is correctly created
-        #     # print("reading parquet file")
-        #     # print(pd.read_parquet(os.path.join(self.directory,  "df.parquet")))
+        if(CustomCallbackA.step == self.num_steps/4):
+            # print("dictionary ", CustomCallbackA.main_data_dict)
+            self.make_dataframes(self.df_list)
+            self.df_to_csv("df_og.csv", self.df_list)
+            self.df_to_parquet()
+            # test if parquet file is correctly created
+            # print("reading parquet file")
+            # print(pd.read_parquet(os.path.join(self.directory,  "df.parquet")))
 
         #     # calculate new info
         #     #self.util()
         #     #self.make_dataframes(self.df_list_mod)
         #     #self.df_to_csv("df_mod.csv", self.df_list_mod)
         #     # self.df_to_parquet()
-        #     print("done!")
+            print("done!")
         CustomCallbackA.step = CustomCallbackA.step + 1
         return True
