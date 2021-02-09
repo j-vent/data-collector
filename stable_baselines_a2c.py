@@ -63,7 +63,7 @@ parser.add_argument('--lives', help='env has lives', action='store_true', defaul
 args = parser.parse_args()
 isLives = args.lives
 # set num timesteps
-num_steps = 24000
+num_steps = 20000
 
 # define callback object
 step_callback = CustomCallbackA(0, actions, env,  num_steps, dir, isLives, make_atari('MsPacmanNoFrameskip-v4'))
@@ -87,7 +87,7 @@ step_callback = CustomCallbackA(0, actions, env,  num_steps, dir, isLives, make_
 # a2c
 model = A2C('CnnPolicy', env, verbose=1, n_steps=5)
 model.learn(total_timesteps=num_steps, callback=step_callback)
-model.save("a2c_pacman_100K_works_hopefully")
+# model.save("a2c_pacman_100K_works_hopefully")
 
 
 
