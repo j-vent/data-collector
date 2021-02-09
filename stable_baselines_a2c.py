@@ -39,7 +39,7 @@ os.makedirs(log_dir, exist_ok=True)
 
 # nv = make_atari_env('MsPacmanNoFrameskip-v4', n_envs=4, seed=0)
 actions = make_atari('MsPacmanNoFrameskip-v4').unwrapped.get_action_meanings()
-env = make_atari_env('MsPacmanNoFrameskip-v4', num_env=1, seed=0, wrapper_kwargs={'clip_rewards':False})
+env = make_atari_env('MsPacmanNoFrameskip-v4', num_env=4, seed=0, wrapper_kwargs={'clip_rewards':False})
 print("env ", env)
 print("type ", type(env))
 # env = Monitor(env, log_dir, allow_early_resets=True)
@@ -63,7 +63,7 @@ parser.add_argument('--lives', help='env has lives', action='store_true', defaul
 args = parser.parse_args()
 isLives = args.lives
 # set num timesteps
-num_steps = 100000
+num_steps = 24000
 
 # define callback object
 step_callback = CustomCallbackA(0, actions, env,  num_steps, dir, isLives, make_atari('MsPacmanNoFrameskip-v4'))

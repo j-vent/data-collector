@@ -246,134 +246,61 @@ class CustomCallbackA(BaseCallback):
         :return: (bool) If the callback returns False, training is aborted early.
         """
         
-        # save screenshot to folder
-        # subfolder = os.path.join(self.directory, 'screen')
-        # filepath = os.path.join(
-        #     subfolder, 'screenshot' + str(self.num_timesteps) + '.png')
-        # self.env.ale.saveScreenPNG("obs_ale.png")
-        # obs = []
-        # what timestep you think
-        # print("timestep ",CustomCallbackA.step )
-        # what timestep a2c learn is on 
-        print("num timestep",self.num_timesteps )
-        print("locs ", self.locals['rewards'])
-        # works at timestep 10, num_timestep 40
-        # if(CustomCallbackA.step >= 10):
-        #     # img = self.locals['obs'][0]
-        #     # print("rolloutsss ", self.locals['rollout'])
-        #     obs, states, rewards, masks, actions, values, ep_infos, true_reward = self.locals['rollout']
-        #     print("true rewards", true_reward)
-        #     print("rewards ", rewards)
-        #     print("masks", masks)
-        #     print("ep info", ep_infos)
-        #     episode_reward = [0,0,0,0]
-        #     # # 4,5 are n_envs, n_steps respectively
-        #     new_rew = self.total_episode_reward_logger(episode_reward,true_reward.reshape((4, 5)),
-        #                                         masks.reshape((4, 5)),
-        #                                         None, self.num_timesteps)
-        #     print("rew!! ", new_rew)
-            # print("rew!! ", true_reward)
-        #     print("shape" , img.shape) 
-        #     # print("type of array ", type(img))
-        #     # img[:,:,0] = np.ones([5,5])*64/255.0
-        #     # img[:,:,1] = np.ones([5,5])*128/255.0
-        #     # img[:,:,2] = np.ones([5,5])*192/255.0
-
-        #     # cv.imwrite('pacman_ss.jpg', img)
-        #     # cv.imshow("image", img)
-        # img = self.locals['obs'][0]
-        # data = im.fromarray(img) 
        
-        # print("rew ", self.env.step_wait())
-        # print(self.locals['rewards'])
-        #print("rew ", self.env.get_original_reward())
-        # print("rew func ", self.env.get_episode_rewards())
-        # print("other rew", self.env.episode_rewards )
-        subfolder = os.path.join(self.directory, 'screen')
-        filepath = os.path.join(subfolder, 'screenshot' + str(self.num_timesteps) + '.png')
-        # filepath = os.path.join(subfolder) 
-        # mpl.image.imsave(filepath, img)
-        
-        # print("locals ", self.locals)
-            # obs = self.locals['obs']
-            
-        mpl.image.imsave(filepath, self.env.get_images()[0])
-        file = open("reward_100k.txt", "a")
-        file.write(str(self.num_timesteps) + " " + str(self.locals['rewards']))
-        file.write('\n')
-        file.close() #This close() is important
-        # val = self.env.get_images()
-        # mpl.image.imsave(CustomCallbackA.step+".png", val[0])
-        # mpl.image.imsave("obs1.png", val[1])
-        # mpl.image.imsave("obs2.png", val[2])
-        # mpl.image.imsave("obs3.png", val[3])
-
-            # print("val ", val)
-        # obs = self.locals['obs']
-        # print("rews ", self.num_timesteps , " ",self.locals['rewards'])
-        # print("mbrews ", self.num_timesteps , " ",self.locals['mb_rewards'])
-        # obs = self.env.get_images()
-        # img_name = '_screenshot' + str(self.num_timesteps)
-        # mpl.image.imsave(filepath+"env_0"+img_name+"_0.png", obs[0])
-        # mpl.image.imsave(filepath+"env_1"+img_name+"_1.png", obs[1])
-        # mpl.image.imsave(filepath+"env_2"+img_name+"_2.png", obs[2])
-        # mpl.image.imsave(filepath+"env_3"+img_name+"_3.png", obs[3])
-           
-        # data.save(filepath) 
-        # obs = cv.imread(filepath)   # reads an image in the BGR format
-        # img = cv.cvtColor(img, cv.COLOR_BGR2RGB)   # BGR -> RGB
-        # print("img ", obs)
-            # save image to disk
-            # cv.imwrite('pacman_ppo2.jpg', img)\
-
-        # documentation says only with one env :(
-        # episode_rewards, episode_lengths = evaluate_policy(self.model, self.env,
-        #                                                        n_eval_episodes=250,
-        #                                                        render=self.render,
-        #                                                        deterministic=self.deterministic,
-        #                                                        return_episode_rewards=True)
-        # if(self.num_timesteps > 8):
-        #     print("rollout", self.locals['rollout'])
-        # episode_rewards is a list that gets appended per epoch
-        # take the episode reward of the latest epoch
-
-        # print("step: ", CustomCallbackA.step,  " rew: ", self.locals['episode_rewards'][-1])
-        # if CustomCallbackA.step  % 1000 == 0:
-        #     print("at step ", CustomCallbackA.step)
-        #print("at step ", str(CustomCallbackA.step))
-        #print("locals ", self.locals)
-        #print("actions", self.locals['mb_actions'])
-            #print("locals", self.locals)
-        # step_stats = {CustomCallbackA.step: {
-        #     'action_env_0': self.locals['actions'][0],
-        #     'action_env_1': self.locals['actions'][1],
-        #     'action_env_2': self.locals['actions'][2],
-        #     'action_env_3': self.locals['actions'][3],
-        #     'action_name_env_0': self.actions[self.locals['actions'][0]],
-        #     'action_name_env_1': self.actions[self.locals['actions'][1]],
-        #     'action_name_env_2': self.actions[self.locals['actions'][2]],
-        #     'action_name_env_3': self.actions[self.locals['actions'][3]],
-        #     'cumulative_episode_reward_env_0': self.locals['rewards'][0],
-        #     'cumulative_episode_reward_env_1': self.locals['rewards'][1],
-        #     'cumulative_episode_reward_env_2': self.locals['rewards'][2],
-        #     'cumulative_episode_reward_env_3': self.locals['rewards'][3],
-        #     'state': CustomCallbackA.step,
-        #     #'lives':self.locals['infos']['ale.lives']
-        #     }
-        # }
-
+        # what timestep you think
+        print("timestep ",CustomCallbackA.step)
+        # what timestep a2c learn is on 
+        print("a2c num timestep",self.num_timesteps)
+       
+        subfolder = os.path.join(self.directory, 'screen/')
+        filepath = os.path.join(subfolder)
+      
+        # mpl.image.imsave(filepath, self.env.get_images()[0])
+        # file = open("reward_100k_4_envs_new.txt", "a")
+        # file.write(str(self.num_timesteps) + " " + str(self.locals['rewards']))
+        # file.write('\n')
+        # file.close() #This close() is important
+        # print("obs ", self.locals)
+        obs = self.env.get_images()
+        # obs = self.locals['obs'] gives black and white imgs
+        img_name = '_screenshot' + str(self.num_timesteps)
+        mpl.image.imsave(subfolder+"env_0"+img_name+"_0.png", obs[0])
+        mpl.image.imsave(subfolder+"env_1"+img_name+"_1.png", obs[1])
+        mpl.image.imsave(subfolder+"env_2"+img_name+"_2.png", obs[2])
+        mpl.image.imsave(subfolder+"env_3"+img_name+"_3.png", obs[3])
+        # print("step ", CustomCallbackA.step)
+        # print("rew ", self.locals['rewards'])   
+        step_stats = {self.num_timesteps: {
+            'num_timesteps': self.num_timesteps,
+            'action_env_0': self.locals['actions'][0],
+            'action_env_1': self.locals['actions'][1],
+            'action_env_2': self.locals['actions'][2],
+            'action_env_3': self.locals['actions'][3],
+            'action_name_env_0': self.actions[self.locals['actions'][0]],
+            'action_name_env_1': self.actions[self.locals['actions'][1]],
+            'action_name_env_2': self.actions[self.locals['actions'][2]],
+            'action_name_env_3': self.actions[self.locals['actions'][3]],
+            'cumulative_episode_reward_env_0': self.locals['rewards'][0],
+            'cumulative_episode_reward_env_1': self.locals['rewards'][1],
+            'cumulative_episode_reward_env_2': self.locals['rewards'][2],
+            'cumulative_episode_reward_env_3': self.locals['rewards'][3],
+            'state': self.num_timesteps/4,
+            #'lives':self.locals['infos']['ale.lives']
+            }
+        }
         # add step to dict
-        # CustomCallbackA.main_data_dict.update(step_stats)
-        # if(self.isLives == True and CustomCallbackA.step == 1):
-        #     CustomCallbackA.main_data_dict[CustomCallbackA.step]['lives_env_0'] = 3
-        #     CustomCallbackA.main_data_dict[CustomCallbackA.step]['lives_env_1'] = 3
-        #     CustomCallbackA.main_data_dict[CustomCallbackA.step]['lives_env_2'] = 3
-        #     CustomCallbackA.main_data_dict[CustomCallbackA.step]['lives_env_3'] = 3
-        # if(CustomCallbackA.step > 2):
-        #     CustomCallbackA.main_data_dict[CustomCallbackA.step]['lives_env_0'] = self.locals['infos'][0]['ale.lives']
-        #     CustomCallbackA.main_data_dict[CustomCallbackA.step]['lives_env_1'] = self.locals['infos'][1]['ale.lives']
-        #     CustomCallbackA.main_data_dict[CustomCallbackA.step]['lives_env_2'] = self.locals['infos'][2]['ale.lives']
-        #     CustomCallbackA.main_data_dict[CustomCallbackA.step]['lives_env_3'] = self.locals['infos'][3]['ale.lives']
+        CustomCallbackA.main_data_dict.update(step_stats)
+        key = self.num_timesteps
+        if(self.isLives == True and CustomCallbackA.step == 1):
+            CustomCallbackA.main_data_dict[key]['lives_env_0'] = 3
+            CustomCallbackA.main_data_dict[key]['lives_env_1'] = 3
+            CustomCallbackA.main_data_dict[key]['lives_env_2'] = 3
+            CustomCallbackA.main_data_dict[key]['lives_env_3'] = 3
+        if(self.isLives == True and CustomCallbackA.step >= 2):
+            CustomCallbackA.main_data_dict[key]['lives_env_0'] = self.locals['infos'][0]['ale.lives']
+            CustomCallbackA.main_data_dict[key]['lives_env_1'] = self.locals['infos'][1]['ale.lives']
+            CustomCallbackA.main_data_dict[key]['lives_env_2'] = self.locals['infos'][2]['ale.lives']
+            CustomCallbackA.main_data_dict[key]['lives_env_3'] = self.locals['infos'][3]['ale.lives']
         
         # # find coordinates of pacman and ghosts
         # key = CustomCallbackA.step
@@ -437,12 +364,12 @@ class CustomCallbackA(BaseCallback):
 
         
         # convert dict to different types
-        # TODO: change to n envs
-        # if(CustomCallbackA.step == self.num_steps/4):
-        #     # print("dictionary ", CustomCallbackA.main_data_dict)
-        #     self.make_dataframes(self.df_list)
-        #     self.df_to_csv("df_og.csv", self.df_list)
-        #     self.df_to_parquet()
+        # TODO: change to n envs * n_steps
+        if(CustomCallbackA.step == self.num_steps/(4)):
+            # print("dictionary ", CustomCallbackA.main_data_dict)
+            self.make_dataframes(self.df_list)
+            self.df_to_csv("df_og.csv", self.df_list)
+            self.df_to_parquet()
             # test if parquet file is correctly created
             # print("reading parquet file")
             # print(pd.read_parquet(os.path.join(self.directory,  "df.parquet")))
