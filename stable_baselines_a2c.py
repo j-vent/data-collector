@@ -28,7 +28,8 @@ subfolder = os.path.join(dir, 'screen')
 os.makedirs(subfolder)
 
 # Create log dir
-log_dir = "/tmp/gym/"
+# log_dir = "tmp/gym/"
+log_dir = "logs/"
 os.makedirs(log_dir, exist_ok=True)
 
 # og_env = make_atari('MsPacmanNoFrameskip-v4')
@@ -38,10 +39,10 @@ os.makedirs(log_dir, exist_ok=True)
 
 # nv = make_atari_env('MsPacmanNoFrameskip-v4', n_envs=4, seed=0)
 actions = make_atari('MsPacmanNoFrameskip-v4').unwrapped.get_action_meanings()
-env = make_atari_env('MsPacmanNoFrameskip-v4', num_env=1, seed=0)
+env = make_atari_env('MsPacmanNoFrameskip-v4', num_env=1, seed=0, wrapper_kwargs={'clip_rewards':False})
 print("env ", env)
 print("type ", type(env))
-env = VecMonitor(env, log_dir)
+# env = Monitor(env, log_dir, allow_early_resets=True)
 # env = DummyVecEnv([lambda: env])
 # Stack 4 frames
 env = VecFrameStack(env, n_stack=4)
@@ -62,7 +63,7 @@ parser.add_argument('--lives', help='env has lives', action='store_true', defaul
 args = parser.parse_args()
 isLives = args.lives
 # set num timesteps
-num_steps = 250
+num_steps = 100000
 
 # define callback object
 step_callback = CustomCallbackA(0, actions, env,  num_steps, dir, isLives, make_atari('MsPacmanNoFrameskip-v4'))
@@ -86,7 +87,7 @@ step_callback = CustomCallbackA(0, actions, env,  num_steps, dir, isLives, make_
 # a2c
 model = A2C('CnnPolicy', env, verbose=1, n_steps=5)
 model.learn(total_timesteps=num_steps, callback=step_callback)
-# model.save("a2c_pacman_100K_test")
+model.save("a2c_pacman_100K_works_hopefully")
 
 
 
