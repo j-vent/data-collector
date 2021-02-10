@@ -21,7 +21,8 @@ import argparse
 from VecMonitor import VecMonitor
 
 # create folder and subfolders for data
-dir = 'ac2_data_' + datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + '/'
+# dir = 'a2c_data_' + datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + '/'
+dir = 'ppo2_data_' + datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + '/'
 # dir = 'a2c_pacman_100k_test'
 os.makedirs(dir)
 subfolder = os.path.join(dir, 'screen')
@@ -63,7 +64,7 @@ parser.add_argument('--lives', help='env has lives', action='store_true', defaul
 args = parser.parse_args()
 isLives = args.lives
 # set num timesteps
-num_steps = 20000
+num_steps = 100000
 
 # define callback object
 step_callback = CustomCallbackA(0, actions, env,  num_steps, dir, isLives, make_atari('MsPacmanNoFrameskip-v4'))
@@ -85,9 +86,17 @@ step_callback = CustomCallbackA(0, actions, env,  num_steps, dir, isLives, make_
 # model.save("deepq_pacman_300K")
 
 # a2c
-model = A2C('CnnPolicy', env, verbose=1, n_steps=5)
+# model = A2C('CnnPolicy', env, verbose=1, n_steps=5)
+# model = PPO2('CnnPolicy', env, verbose=1, n_steps=5)
+# model.learn(total_timesteps=num_steps, callback=step_callback)
+# model.save("a2c_pacman_100K_working_version")
+# model.save("ppo2_pacman_100K_working_version")
+
+# use pretrained model:
+model = A2C.load("a2c_pacman_100K_working_version", learning_rate = 0)
+model.set_env(env)
 model.learn(total_timesteps=num_steps, callback=step_callback)
-# model.save("a2c_pacman_100K_works_hopefully")
+
 
 
 
