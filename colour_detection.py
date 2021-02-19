@@ -16,10 +16,30 @@ def find_element_centroid(img, colour, coord):
         coord[0] = round(coordx)
         coord[1] = round(coordy)
 
+# TODO: rewrite this method and the find_elem_centroid into one method, can just pass in another param probably
+def find_element_centroid_pong(img, colour, coord):
+    y,x = np.where(np.all(img == colour, axis=2))
+    pairs = []
+    
+    for i in range(len(x)):
+        # restricts the bounds of the play environment
+        if(y[i] >= 33.5 and y[i] <= 193.5):
+            pairs.append([x[i],y[i]])
+    #print("pairs ", pairs)
+    if(len(pairs) != 0):
+        # calculate centroid
+        coordx, coordy = np.mean(pairs, axis = 0)
+        coord[0] = round(coordx)
+        coord[1] = round(coordy)
+
+
 # TODO: rewrite to put dist[0] elsewhere
-def find_distances(coord, dist):
-    dist[0] = abs(coord[0] - pacman_coord[0]) + abs(coord[1] - pacman_coord[1])
-    # print("dist", dist)
+def find_distances(coordA, coordB, dist):
+    # dist[0] = abs(coord[0] - pacman_coord[0]) + abs(coord[1] - pacman_coord[1])
+    #print("coordA ", coordA)
+    #print("coordB ", coordB)
+    dist[0] = abs(coordA[0] - coordB[0]) + abs(coordA[1] - coordB[1])
+    #print("dist", dist)
 
 def find_blue_ghosts(img):
     image = cv.cvtColor(img, cv.COLOR_BGR2HSV)
@@ -79,6 +99,8 @@ pill_dist = [0,0,0,0]
 
 def find_all_coords(im):
     img = cv.imread(im)
+    # img = im
+    # print("im ", im)
     # img_plot = cv.imread(im,0)
     # # plot img and edge detection
     # edges = cv.Canny(img_plot,100,200)
@@ -91,19 +113,41 @@ def find_all_coords(im):
     # move to own func
     find_element_centroid(img, pacman_colour, pacman_coord)
     find_element_centroid(img, pink_ghost_colour, pink_ghost_coord)
-    find_distances(pink_ghost_coord, to_pink_ghost)
+    find_distances(pink_ghost_coord, pacman_coord, to_pink_ghost)
     find_element_centroid(img, red_ghost_colour, red_ghost_coord)
-    find_distances(red_ghost_coord, to_red_ghost)
+    find_distances(red_ghost_coord, pacman_coord, to_red_ghost)
     find_element_centroid(img, green_ghost_colour, green_ghost_coord)
-    find_distances(green_ghost_coord, to_green_ghost)
+    find_distances(green_ghost_coord, pacman_coord, to_green_ghost)
     find_element_centroid(img, orange_ghost_colour, orange_ghost_coord)
-    find_distances(orange_ghost_coord, to_orange_ghost)
+    find_distances(orange_ghost_coord, pacman_coord, to_orange_ghost)
 
     check_pills()
 
     hasBlueGhost = find_blue_ghosts(img)
 
     return pacman_coord, pink_ghost_coord, red_ghost_coord, green_ghost_coord, orange_ghost_coord, to_pink_ghost[0], to_red_ghost[0], to_green_ghost[0], to_orange_ghost[0], pill_eaten, pill_dist, hasBlueGhost
+
+ball_colour = [236, 236, 236]
+green_paddle_colour = [92, 186, 92]
+brown_paddle_colour = [74, 130, 213]
+ball_coord = [0,0]
+green_paddle_coord = [0,0]
+brown_paddle_coord = [0,0]
+dist_ball_green_paddle = [0]
+
+def find_pong_coords(im):
+    # or just pass in the obs array...
+    img = cv.imread(im)
+    # print("plot")
+    # plt.imshow(cv.cvtColor(img, cv.COLOR_BGR2RGB)) 
+    # plt.show()
+    find_element_centroid_pong(img, ball_colour, ball_coord)
+    find_element_centroid_pong(img, green_paddle_colour, green_paddle_coord)
+    find_element_centroid_pong(img, brown_paddle_colour, brown_paddle_coord)
+    # print("ball ", ball_coord)
+    # print("green ", green_paddle_coord)
+    find_distances(green_paddle_coord, ball_coord, dist_ball_green_paddle)
+    return ball_coord, green_paddle_coord, brown_paddle_coord, dist_ball_green_paddle[0]
 
 # print("pacman coord ", pacman_coord)
 # print("pink ghost ", pink_ghost_coord)
