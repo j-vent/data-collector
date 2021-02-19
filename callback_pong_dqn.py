@@ -176,16 +176,15 @@ class CustomCallback(BaseCallback):
             filepath = dir + "\screen\screenshot" + str(key) + ".png"
 
             
-            ball_coord, green_paddle_coord, brown_paddle_coord = cd.find_pong_coords(filepath)
+            ball_coord, green_paddle_coord, brown_paddle_coord, distance = cd.find_pong_coords(filepath)
             CustomCallback.main_data_dict[key]['ball_coord_x'] = ball_coord[0]
             CustomCallback.main_data_dict[key]['ball_coord_y'] = ball_coord[1]
             CustomCallback.main_data_dict[key]['green_paddle_coord_x'] = green_paddle_coord[0]
             CustomCallback.main_data_dict[key]['green_paddle_coord_y'] = green_paddle_coord[1]
             CustomCallback.main_data_dict[key]['brown_paddle_coord_x'] = brown_paddle_coord[0]
             CustomCallback.main_data_dict[key]['brown_paddle_coord_y'] = brown_paddle_coord[1]
-     
+            CustomCallback.main_data_dict[key]['paddle_ball_distance'] = distance
  
-
     def _on_step(self) -> bool:
         if(CustomCallback.step == 1):
             
